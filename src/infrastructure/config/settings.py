@@ -25,7 +25,7 @@ class Settings(BaseSettings):
 
     github_client_id: str | None = Field(default=None, alias="GITHUB_CLIENT_ID")
     github_client_secret: str | None = Field(default=None, alias="GITHUB_CLIENT_SECRET")
-    github_oauth_callback_url: str | None = Field(default=None, alias="GITHUB_OAUTH_CALLBACK_URI")
+    github_oauth_callback_url: str | None = Field(default=None, alias="GITHUB_OAUTH_CALLBACK_URL")
 
     @computed_field
     @property

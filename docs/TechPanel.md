@@ -1,5 +1,6 @@
-# Deploy Manager — Documentação técnica
+# TechPanel — Documentação técnica
 
+> **Projeto (repositório):** TechPanel.  
 > Gestor de ambientes para execução de deploys com pipeline de passos sequenciais, controle de acesso, histórico de auditoria e execução remota segura via SSH. Suporte inicial a PHP (backend) e Vue (frontend), extensível para novas tecnologias.
 
 **Versão:** 2.0 — última atualização: 2025
@@ -23,7 +24,7 @@
 13. [Execução remota segura](#13-execução-remota-segura)
 14. [Controle de concorrência (lock)](#14-controle-de-concorrência-lock)
 15. [Status em tempo real](#15-status-em-tempo-real)
-16. [Frontend — Tech Panel](#16-frontend--tech-panel)
+16. [Frontend — TechPanel](#16-frontend--techpanel)
 17. [Critérios de aceite](#17-critérios-de-aceite)
 18. [Dependências Python](#18-dependências-python)
 19. [Decisões pendentes](#19-decisões-pendentes)
@@ -32,7 +33,7 @@
 
 ## 1. Visão geral
 
-O Deploy Manager é um painel interno (Tech Panel) que permite a usuários técnicos autorizados:
+O TechPanel é um painel interno para equipes técnicas que permite a usuários autorizados:
 
 - Cadastrar pipelines com passos sequenciais e configuráveis de deploy
 - Executar pipelines com avanço automático apenas após conclusão bem-sucedida de cada passo
@@ -99,7 +100,7 @@ O sistema segue a arquitetura hexagonal (Ports & Adapters), dividida em três ca
 ## 4. Estrutura de pastas
 
 ```
-deploy-manager/
+techpanel/
 │
 ├── src/
 │   │
@@ -220,7 +221,7 @@ deploy-manager/
 │               ├── servers/
 │               ├── projects/
 │               ├── pipelines/             # Cadastro e edição de pipelines
-│               └── panel/                 # Tech Panel — execução e histórico
+│               └── panel/                 # TechPanel — execução e histórico
 │
 ├── tests/
 │   ├── unit/
@@ -528,7 +529,7 @@ Pipeline: Deploy Completo Prod
 [ + Adicionar passo ]                       [ Salvar pipeline ]
 ```
 
-### Tech Panel — painel de execução
+### TechPanel — painel de execução
 Tela principal de execução, detalhada na seção 16.
 
 ---
@@ -633,7 +634,7 @@ Tela principal de execução, detalhada na seção 16.
 | `GET` | `/api/github/repos` | Lista repositórios |
 | `GET` | `/api/github/repos/{repo}/refs` | Lista branches e tags |
 
-### Execuções (Tech Panel)
+### Execuções (TechPanel)
 
 | Método | Rota | Acesso | Descrição |
 |---|---|---|---|
@@ -815,7 +816,7 @@ async def stream_execution(id: str):
 
 ---
 
-## 16. Frontend — Tech Panel
+## 16. Frontend — TechPanel
 
 ### Seletor de contexto
 
@@ -920,7 +921,7 @@ Clicando em qualquer linha abre o detalhe da execução com status passo a passo
 - [ ] Cadastro e edição de pipelines com passos configuráveis
 - [ ] Passos podem ser adicionados, removidos e reordenados
 - [ ] Cada passo permite configurar: nome, tipo, comando, diretório, timeout e política de falha
-- [ ] O Tech Panel permite selecionar projeto, ambiente, pipeline e branch/tag
+- [ ] O TechPanel permite selecionar projeto, ambiente, pipeline e branch/tag
 - [ ] Modal de confirmação antes de qualquer execução
 - [ ] Confirmação reforçada (texto `CONFIRMAR`) para ambiente `production`
 - [ ] Sistema bloqueia nova execução quando há processo ativo no projeto (`HTTP 409`)

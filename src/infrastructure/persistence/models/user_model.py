@@ -2,8 +2,6 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import TYPE_CHECKING
-
 from sqlalchemy import Boolean, DateTime, String, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -14,12 +12,6 @@ from src.infrastructure.persistence.models.execution_model import ExecutionModel
 from src.infrastructure.persistence.models.pipeline_model import PipelineModel
 from src.infrastructure.persistence.models.project_model import ProjectModel
 from src.infrastructure.persistence.models.server_model import ServerModel
-
-if TYPE_CHECKING:
-    from src.infrastructure.persistence.models.execution_model import ExecutionModel
-    from src.infrastructure.persistence.models.pipeline_model import PipelineModel
-    from src.infrastructure.persistence.models.project_model import ProjectModel
-    from src.infrastructure.persistence.models.server_model import ServerModel
 
 
 class UserModel(Base):
