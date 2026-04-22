@@ -52,11 +52,11 @@ Documento operacional para acompanhar o desenvolvimento do projeto **TechPanel**
 
 **Objetivo:** regras e contratos sem dependência de framework ou ORM.
 
-- [ ] Entidades em `src/domain/entities/` (`User`, `Server`, `Project`, `Environment`, `Pipeline`, `PipelineStep`, `Execution`, `StepExecution`)  
-- [ ] Value objects / enums de domínio em `src/domain/value_objects/` (status, tipos de passo, `on_failure`, tipo de ambiente)  
-- [ ] Ports: repositórios em `src/domain/ports/repositories/`  
-- [ ] Ports: serviços em `src/domain/ports/services/` (`ISSHService`, `IGitHubService`, `IStepRunner`, `INotificationService`)  
-- [ ] Validações puras no domínio onde couber (ex.: email, ordem de passos > 0)  
+- [x] Entidades em `src/domain/entities/` (`User`, `Server`, `Project`, `Environment`, `Pipeline`, `PipelineStep`, `Execution`, `StepExecution`)  
+- [x] Value objects / enums de domínio em `src/domain/value_objects/` (status, tipos de passo, `on_failure`, tipo de ambiente)  
+- [x] Ports: repositórios em `src/domain/ports/repositories/`  
+- [x] Ports: serviços em `src/domain/ports/services/` (`ISSHService`, `IGitHubService`, `IStepRunner`, `INotificationService`)  
+- [x] Validações puras no domínio onde couber (ex.: email, ordem de passos > 0)  
 
 **Critério de pronto:** módulo `domain` importável sem `fastapi`, `sqlalchemy`, `paramiko`.
 
