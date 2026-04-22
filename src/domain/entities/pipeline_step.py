@@ -40,7 +40,7 @@ class PipelineStep:
         if not step_type:
             raise ValidationError("Step type is required")
 
-        if not command.strip:
+        if not command.strip():
             raise ValidationError("Command is required")
 
         if not on_failure:

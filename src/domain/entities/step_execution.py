@@ -38,5 +38,5 @@ class StepExecution:
     def mark_failed(self, log_output: str, exit_code: int) -> "StepExecution":
         return replace(self, status=StepExecutionStatus.FAILED, log_output=log_output, exit_code=exit_code)
 
-    def mark_skipped(self, log_output: str) -> "StepExecution":
+    def mark_skipped(self, log_output: str | None = None) -> "StepExecution":
         return replace(self, status=StepExecutionStatus.SKIPPED, log_output=log_output)

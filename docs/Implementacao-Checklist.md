@@ -66,9 +66,9 @@ Documento operacional para acompanhar o desenvolvimento do projeto **TechPanel**
 
 **Objetivo:** orquestração testável sobre os ports.
 
-- [ ] DTOs de entrada/saída em `src/application/dtos/`  
-- [ ] Casos de uso por agregado, pastas espelhando o doc (`auth`, `servers`, `projects`, `pipelines`, `executions`)  
-- [ ] Tratamento de erro de aplicação (exceções de domínio vs infra) sem vazar detalhes internos na API  
+- [x] DTOs de entrada/saída em `src/application/dtos/`  
+- [x] Casos de uso por agregado, pastas espelhando o doc (`auth`, `servers`, `projects`, `pipelines`, `executions`)  
+- [x] Tratamento de erro de aplicação (exceções de domínio vs infra) sem vazar detalhes internos na API  
 
 **Critério de pronto:** pelo menos um use case (ex.: “obter usuário por email”) coberto por teste unitário com **fakes** dos repositórios.
 
@@ -120,7 +120,7 @@ Documento operacional para acompanhar o desenvolvimento do projeto **TechPanel**
 
 - [ ] CRUD API de servidores (conforme endpoints do doc)  
 - [ ] Criptografia Fernet para `private_key_enc` (chave só no `.env`)  
-- [ ] Use case `test_connection` usando `Paramiko` atrás do port `ISSHService`  
+- [ ] Use case `CheckSSHConnection` (`check_ssh_connection.py`) usando `Paramiko` atrás do port `ISSHService`  
 - [ ] Auditoria mínima: `created_by` preenchido  
 
 **Critério de pronto:** admin cadastra servidor, testa SSH com sucesso; chave nunca retornada em claro na API.
@@ -223,4 +223,4 @@ Documento operacional para acompanhar o desenvolvimento do projeto **TechPanel**
 - Itens **(opcional)** podem ser movidos para um arquivo de backlog se poluírem o MVP.  
 - Data da última revisão: preencher abaixo.
 
-**Última revisão:** _YYYY-MM-DD_
+**Última revisão:** 2026-04-22

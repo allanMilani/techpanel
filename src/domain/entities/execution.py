@@ -33,3 +33,9 @@ class Execution:
 
     def mark_running(self) -> "Execution":
         return replace(self, status=ExecutionStatus.RUNNING)
+
+    def mark_success(self) -> "Execution":
+        return replace(self, status=ExecutionStatus.SUCCESS)
+
+    def mark_failed(self) -> "Execution":
+        return replace(self, status=ExecutionStatus.FAILED)

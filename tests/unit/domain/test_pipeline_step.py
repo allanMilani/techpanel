@@ -27,3 +27,15 @@ def test_should_raise_validation_error_if_order_is_less_than_1() -> None:
             command="x",
             on_failure=OnFailurePolicy.STOP,
         )
+
+
+def test_should_raise_validation_error_if_command_is_empty() -> None:
+    with pytest.raises(ValidationError):
+        PipelineStep.create(
+            pipeline_id="00000000-0000-0000-0000-000000000001",
+            order=1,
+            name="Sem comando",
+            step_type=StepType.SSH_COMMAND,
+            command="   ",
+            on_failure=OnFailurePolicy.STOP,
+        )

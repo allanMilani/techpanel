@@ -22,5 +22,5 @@ class IExecutionRepository(ABC):
         ...
 
     @abstractmethod
-    async def get_active_by_project(self, project_id: UUID) -> Execution | None:
+    async def get_active_execution_for_environment(self, environment_id: UUID) -> Execution | None:
         ...

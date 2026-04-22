@@ -143,7 +143,7 @@ techpanel/
 │   │   │   ├── servers/
 │   │   │   │   ├── create_server.py
 │   │   │   │   ├── update_server.py
-│   │   │   │   └── test_connection.py
+│   │   │   │   └── check_ssh_connection.py
 │   │   │   ├── projects/
 │   │   │   │   ├── create_project.py
 │   │   │   │   └── link_environment.py

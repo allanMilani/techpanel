@@ -19,8 +19,8 @@ class Server:
         host: str, 
         port: int, 
         ssh_user: str, 
-        private_key_enc: str, 
-        created_by: str
+        private_key_enc: str,
+        created_by: UUID | str,
     ) -> "Server":
         if not name.strip():
             raise ValidationError("Name is required")
@@ -37,7 +37,8 @@ class Server:
         if not private_key_enc:
             raise ValidationError("Private key is required")
 
-        if not created_by.strip():
+        created_uuid = created_by if isinstance(created_by, UUID) else UUID(str(created_by).strip())
+        if not str(created_uuid).strip():
             raise ValidationError("Created by is required")
 
         return Server(
@@ -47,5 +48,5 @@ class Server:
             port=port,
             ssh_user=ssh_user.strip(),
             private_key_enc=private_key_enc,
-            created_by=UUID(created_by),
+            created_by=created_uuid,
         )
