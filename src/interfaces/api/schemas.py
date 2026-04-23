@@ -13,6 +13,18 @@ class LoginResponse(BaseModel):
     role: str
 
 
+class StartExecutionRequest(BaseModel):
+    pipeline_id: str
+    branch_or_tag: str
+
+
+class ExecutionResponse(BaseModel):
+    id: str
+    pipeline_id: str
+    branch_or_tag: str
+    status: str
+
+
 class ErrorResponse(BaseModel):
     error: str
     detail: str

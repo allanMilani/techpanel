@@ -103,11 +103,11 @@ Documento operacional para acompanhar o desenvolvimento do projeto **TechPanel**
 
 **Objetivo:** JWT + papéis `admin` / `viewer` (seção 11 e 17).
 
-- [ ] Hash de senha (bcrypt) na criação/atualização de usuário  
-- [ ] `POST` login emitindo JWT; payload mínimo (`sub`, `role`, exp)  
-- [ ] Dependency `get_current_user` + `require_admin` onde necessário  
-- [ ] `viewer` bloqueado de executar pipelines **(critério de aceite)**  
-- [ ] Rotação / revogação **(opcional MVP):** documentar como “fase 2”  
+- [x] Hash de senha (bcrypt) na criação/atualização de usuário  
+- [x] `POST` login emitindo JWT; payload mínimo (`sub`, `role`, exp)  
+- [x] Dependency `get_current_user` + `require_admin` onde necessário  
+- [x] `viewer` bloqueado de executar pipelines **(critério de aceite)**  
+- [x] Rotação / revogação **(opcional MVP):** documentar como “fase 2” — ver [Auth-Phase2.md](./Auth-Phase2.md)  
 
 **Critério de pronto:** token válido acessa rotas protegidas; token `viewer` recebe `403` em operação de escrita/execução.
 
