@@ -117,10 +117,10 @@ Documento operacional para acompanhar o desenvolvimento do projeto **TechPanel**
 
 **Objetivo:** cadastro seguro e teste de conexão.
 
-- [ ] CRUD API de servidores (conforme endpoints do doc)  
-- [ ] Criptografia Fernet para `private_key_enc` (chave só no `.env`)  
-- [ ] Use case `CheckSSHConnection` (`check_ssh_connection.py`) usando `Paramiko` atrás do port `ISSHService`  
-- [ ] Auditoria mínima: `created_by` preenchido  
+- [x] CRUD API de servidores (conforme endpoints do doc)  
+- [x] Criptografia Fernet para `private_key_enc` (chave só no `.env`)  
+- [x] Use case `CheckSSHConnection` (`check_ssh_connection.py`) usando `Paramiko` atrás do port `ISSHService`  
+- [x] Auditoria mínima: `created_by` preenchido  
 
 **Critério de pronto:** admin cadastra servidor, testa SSH com sucesso; chave nunca retornada em claro na API.
 

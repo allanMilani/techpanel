@@ -2,59 +2,20 @@ from dataclasses import dataclass
 from typing import Annotated
 
 from fastapi import Depends, Header, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.use_cases.auth.login import Login
-from src.application.use_cases.executions.start_execution import StartExecution
-from src.domain.ports.repositories import (
-    IExecutionRepository,
-    IPipelineRepository,
-    IStepExecutionRepository,
-    IUserRepository,
-)
+from src.domain.ports.repositories import IUserRepository
 from src.domain.ports.services import IPasswordHasher, ITokenService
-from src.infrastructure.persistence.repositories.pg_user_repository import (
-    PgUserRepository,
-)
-from src.infrastructure.persistence.database import get_db_session
-from src.infrastructure.persistence.repositories import (
-    PgExecutionRepository,
-    PgPipelineRepository,
-    PgStepExecutionRepository,
-)
+from src.infrastructure.config.settings import get_settings
 from src.infrastructure.security.password_hasher import BcryptPasswordHasher
 from src.infrastructure.security.token_service import JwtTokenService
-from src.infrastructure.config.settings import get_settings
+from src.interfaces.api.dependencies.core import get_user_repository
 
 
 @dataclass(slots=True, frozen=True)
 class CurrentUser:
     sub: str
     role: str
-
-
-def get_user_repository(
-    session: Annotated[AsyncSession, Depends(get_db_session)],
-) -> IUserRepository:
-    return PgUserRepository(session)
-
-
-def get_pipeline_repository(
-    session: Annotated[AsyncSession, Depends(get_db_session)],
-) -> IPipelineRepository:
-    return PgPipelineRepository(session)
-
-
-def get_execution_repository(
-    session: Annotated[AsyncSession, Depends(get_db_session)],
-) -> IExecutionRepository:
-    return PgExecutionRepository(session)
-
-
-def get_step_execution_repository(
-    session: Annotated[AsyncSession, Depends(get_db_session)],
-) -> IStepExecutionRepository:
-    return PgStepExecutionRepository(session)
 
 
 def get_password_hasher() -> IPasswordHasher:
@@ -79,20 +40,6 @@ def get_login_use_case(
         user_repo=user_repo,
         password_hasher=password_hasher,
         token_service=token_service,
-    )
-
-
-def get_start_execution_use_case(
-    pipeline_repo: Annotated[IPipelineRepository, Depends(get_pipeline_repository)],
-    execution_repo: Annotated[IExecutionRepository, Depends(get_execution_repository)],
-    step_execution_repo: Annotated[
-        IStepExecutionRepository, Depends(get_step_execution_repository)
-    ],
-) -> StartExecution:
-    return StartExecution(
-        pipeline_repo=pipeline_repo,
-        execution_repo=execution_repo,
-        step_execution_repo=step_execution_repo,
     )
 
 

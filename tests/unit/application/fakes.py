@@ -277,3 +277,16 @@ class MemoryPipelineRepo:
             if s.order > after_order and s.is_active:
                 return s
         return None
+
+
+class FakeFernetKeyCipher:
+    def __init__(self) -> None:
+        self._store: dict[str, str] = {}
+
+    def encrypt(self, plain_text: str) -> str:
+        token = f"enc:{plain_text}"
+        self._store[token] = plain_text
+        return token
+
+    def decrypt(self, cipher_text: str) -> str:
+        return self._store.get(cipher_text, cipher_text.replace("enc:", ""))

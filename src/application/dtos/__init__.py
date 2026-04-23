@@ -21,7 +21,11 @@ from src.application.dtos.project_dto import (
     LinkEnvironmentInputDTO,
     ProjectOutputDTO,
 )
-from src.application.dtos.server_dto import CreateServerInputDTO, ServerOutputDTO
+from src.application.dtos.server_dto import (
+    CreateServerInputDTO,
+    ServerOutputDTO,
+    UpdateServerInputDTO,
+)
 
 __all__ = [
     "LoginInputDTO",
@@ -44,4 +48,5 @@ __all__ = [
     "StepExecutionOutputDTO",
     "execution_to_output_dto",
     "step_execution_to_output_dto",
+    "UpdateServerInputDTO",
 ]

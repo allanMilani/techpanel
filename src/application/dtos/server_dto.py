@@ -20,3 +20,12 @@ class ServerOutputDTO:
     port: int
     ssh_user: str
     created_by: UUID
+
+
+@dataclass(slots=True, frozen=True)
+class UpdateServerInputDTO:
+    name: str
+    host: str
+    port: int
+    ssh_user: str
+    private_key_plain: str | None = None
