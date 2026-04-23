@@ -4,6 +4,7 @@ from uuid import UUID, uuid4
 from src.domain.errors import ValidationError
 from src.domain.value_objects.step_execution_status import StepExecutionStatus
 
+
 @dataclass(slots=True, frozen=True)
 class StepExecution:
     id: UUID
@@ -28,15 +29,25 @@ class StepExecution:
             log_output=None,
             exit_code=None,
         )
-            
+
     def mark_running(self) -> "StepExecution":
         return replace(self, status=StepExecutionStatus.RUNNING)
 
     def mark_success(self, log_output: str, exit_code: int = 0) -> "StepExecution":
-        return replace(self, status=StepExecutionStatus.SUCCESS, log_output=log_output, exit_code=exit_code)
+        return replace(
+            self,
+            status=StepExecutionStatus.SUCCESS,
+            log_output=log_output,
+            exit_code=exit_code,
+        )
 
     def mark_failed(self, log_output: str, exit_code: int) -> "StepExecution":
-        return replace(self, status=StepExecutionStatus.FAILED, log_output=log_output, exit_code=exit_code)
+        return replace(
+            self,
+            status=StepExecutionStatus.FAILED,
+            log_output=log_output,
+            exit_code=exit_code,
+        )
 
     def mark_skipped(self, log_output: str | None = None) -> "StepExecution":
         return replace(self, status=StepExecutionStatus.SKIPPED, log_output=log_output)

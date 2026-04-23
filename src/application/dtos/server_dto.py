@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from uuid import UUID
 
+
 @dataclass(slots=True, frozen=True)
 class CreateServerInputDTO:
     name: str
@@ -9,6 +10,7 @@ class CreateServerInputDTO:
     ssh_user: str
     private_key_plain: str
     created_by: UUID
+
 
 @dataclass(slots=True, frozen=True)
 class ServerOutputDTO:

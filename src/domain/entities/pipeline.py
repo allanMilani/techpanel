@@ -4,6 +4,7 @@ from uuid import UUID, uuid4
 from src.domain.entities.pipeline_step import PipelineStep
 from src.domain.errors import ValidationError
 
+
 @dataclass(slots=True, frozen=True)
 class Pipeline:
     id: UUID
@@ -13,7 +14,9 @@ class Pipeline:
     steps: tuple[PipelineStep, ...] = ()
 
     @staticmethod
-    def create(name: str, environment_id: str, description: str | None = None) -> "Pipeline":
+    def create(
+        name: str, environment_id: str, description: str | None = None
+    ) -> "Pipeline":
         if not name.strip():
             raise ValidationError("Name is required")
 
@@ -35,4 +38,6 @@ class Pipeline:
         if step.pipeline_id != self.id:
             raise ValidationError("Step pipeline ID must match pipeline ID")
 
-        return replace(self, steps=tuple(sorted((*self.steps, step), key=lambda s: s.order)))
+        return replace(
+            self, steps=tuple(sorted((*self.steps, step), key=lambda s: s.order))
+        )

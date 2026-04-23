@@ -83,14 +83,14 @@ current: ## Mostra revisão atual no banco
 # Quality / Tests
 # ----------------------------
 
-test: ## Executa testes
+test:
 	uv run pytest -q
 
 format: ## Formata código (se ruff/black estiverem adicionados)
 	uv run ruff format .
 
 lint: ## Executa lint (se ruff estiver adicionado)
-	uv run ruff check .
+	make format && uv run ruff check .
 
 check: lint test ## Executa validações principais
 

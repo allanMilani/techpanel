@@ -3,6 +3,7 @@ from uuid import UUID, uuid4
 
 from src.domain.errors import ValidationError
 
+
 @dataclass(slots=True, frozen=True)
 class Project:
     id: UUID
@@ -13,10 +14,7 @@ class Project:
 
     @staticmethod
     def create(
-        name: str, 
-        repo_github: str, 
-        tech_stack: str, 
-        created_by: str
+        name: str, repo_github: str, tech_stack: str, created_by: str
     ) -> "Project":
         if not name.strip():
             raise ValidationError("Name is required")
@@ -40,4 +38,3 @@ class Project:
             tech_stack=tech_stack.strip().lower(),
             created_by=UUID(created_by),
         )
-    

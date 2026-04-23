@@ -4,6 +4,7 @@ from uuid import UUID, uuid4
 from src.domain.errors import ValidationError
 from src.domain.value_objects.execution_status import ExecutionStatus
 
+
 @dataclass(slots=True, frozen=True)
 class Execution:
     id: UUID

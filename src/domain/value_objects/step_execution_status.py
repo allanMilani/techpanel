@@ -1,5 +1,6 @@
 from enum import StrEnum
 
+
 class StepExecutionStatus(StrEnum):
     PENDING = "pending"
     RUNNING = "running"

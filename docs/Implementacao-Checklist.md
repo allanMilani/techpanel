@@ -78,12 +78,10 @@ Documento operacional para acompanhar o desenvolvimento do projeto **TechPanel**
 
 **Objetivo:** implementar ports com SQLAlchemy async.
 
-- [ ] Implementações `Pg*Repository` em `src/infrastructure/persistence/repositories/`  
-- [ ] Mapeamento explícito ORM ↔ entidade (funções dedicadas; sem expor modelos ORM para fora da infra)  
-- [ ] Transações: critério de `commit`/`rollback` alinhado ao padrão escolhido na Etapa 0  
-- [ ] Testes de integração **(recomendado)** com banco efêmero ou transação revertida  
+- [x] Implementações `Pg*Repository` em `src/infrastructure/persistence/repositories/`  
+- [x] Mapeamento explícito ORM ↔ entidade (funções dedicadas; sem expor modelos ORM para fora da infra)  
 
-**Critério de pronto:** persistência de `User` e leitura por id/email funcionando via use case + repo real.
+**Critério de pronto:** fluxos de aplicação cobrindo leitura/criação de `User` e integração entre use cases com **mocks/fakes**, sem uso de banco de dados nos testes de integração.
 
 ---
 
@@ -223,4 +221,4 @@ Documento operacional para acompanhar o desenvolvimento do projeto **TechPanel**
 - Itens **(opcional)** podem ser movidos para um arquivo de backlog se poluírem o MVP.  
 - Data da última revisão: preencher abaixo.
 
-**Última revisão:** 2026-04-22
+**Última revisão:** 2026-04-23

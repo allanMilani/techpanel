@@ -21,7 +21,9 @@ class StepExecutionModel(Base):
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
     execution_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("executions.id", ondelete="CASCADE"), nullable=False
+        UUID(as_uuid=True),
+        ForeignKey("executions.id", ondelete="CASCADE"),
+        nullable=False,
     )
     pipeline_step_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),

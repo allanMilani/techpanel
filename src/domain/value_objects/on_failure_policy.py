@@ -1,5 +1,6 @@
 from enum import StrEnum
 
+
 class OnFailurePolicy(StrEnum):
     STOP = "stop"
     CONTINUE = "continue"

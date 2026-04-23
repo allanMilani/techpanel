@@ -3,6 +3,7 @@ from uuid import UUID, uuid4
 
 from src.domain.errors import ValidationError
 
+
 @dataclass(slots=True, frozen=True)
 class Server:
     id: UUID
@@ -12,13 +13,13 @@ class Server:
     ssh_user: str
     private_key_enc: str
     created_by: UUID
-    
+
     @staticmethod
     def create(
-        name: str, 
-        host: str, 
-        port: int, 
-        ssh_user: str, 
+        name: str,
+        host: str,
+        port: int,
+        ssh_user: str,
         private_key_enc: str,
         created_by: UUID | str,
     ) -> "Server":
@@ -37,7 +38,11 @@ class Server:
         if not private_key_enc:
             raise ValidationError("Private key is required")
 
-        created_uuid = created_by if isinstance(created_by, UUID) else UUID(str(created_by).strip())
+        created_uuid = (
+            created_by
+            if isinstance(created_by, UUID)
+            else UUID(str(created_by).strip())
+        )
         if not str(created_uuid).strip():
             raise ValidationError("Created by is required")
 

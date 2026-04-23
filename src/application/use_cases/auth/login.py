@@ -5,10 +5,7 @@ from src.domain.ports.repositories import IUserRepository
 
 class Login:
     def __init__(
-        self,
-        user_repo: IUserRepository,
-        password_hasher,
-        token_service
+        self, user_repo: IUserRepository, password_hasher, token_service
     ) -> None:
         self.user_repo = user_repo
         self.password_hasher = password_hasher
@@ -24,8 +21,7 @@ class Login:
             raise UnauthorizedAppError("Invalid email or password")
 
         token = self.token_service.create_access_token(
-            sub=str(user.id),
-            role=user.role.value
+            sub=str(user.id), role=user.role.value
         )
 
         return LoginOutputDTO(

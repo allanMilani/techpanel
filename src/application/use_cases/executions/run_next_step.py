@@ -27,9 +27,7 @@ class RunNextStep:
         self.runner_registry = runner_registry
         self.notification_service = notification_service
 
-    async def _pending_step_execution(
-        self, execution_id: UUID, pipeline_step_id: UUID
-    ):
+    async def _pending_step_execution(self, execution_id: UUID, pipeline_step_id: UUID):
         steps = await self.step_execution_repo.list_by_execution(execution_id)
         return next(
             (
@@ -47,14 +45,22 @@ class RunNextStep:
             if execution is None:
                 raise NotFoundAppError("Execution not found")
 
-            all_step_execs = await self.step_execution_repo.list_by_execution(dto.execution_id)
+            all_step_execs = await self.step_execution_repo.list_by_execution(
+                dto.execution_id
+            )
 
             failed_last = next(
-                (s for s in reversed(all_step_execs) if s.status == StepExecutionStatus.FAILED),
+                (
+                    s
+                    for s in reversed(all_step_execs)
+                    if s.status == StepExecutionStatus.FAILED
+                ),
                 None,
             )
             if failed_last:
-                pipeline_steps = await self.pipeline_repo.list_steps(execution.pipeline_id)
+                pipeline_steps = await self.pipeline_repo.list_steps(
+                    execution.pipeline_id
+                )
                 failed_def = next(
                     (s for s in pipeline_steps if s.id == failed_last.pipeline_step_id),
                     None,
@@ -63,7 +69,9 @@ class RunNextStep:
                     raise NotFoundAppError("Failed pipeline step definition not found")
 
                 if failed_def.on_failure == OnFailurePolicy.STOP:
-                    await self.step_execution_repo.skip_remaining(execution.id, failed_last.order)
+                    await self.step_execution_repo.skip_remaining(
+                        execution.id, failed_last.order
+                    )
                     await self.execution_repo.update(execution.mark_failed())
                     return
 
@@ -72,8 +80,12 @@ class RunNextStep:
                         raise ValidationAppError(
                             "Notification service is required for NOTIFY_AND_STOP policy"
                         )
-                    await self.notification_service.notify_execution_failed(execution, failed_last)
-                    await self.step_execution_repo.skip_remaining(execution.id, failed_last.order)
+                    await self.notification_service.notify_execution_failed(
+                        execution, failed_last
+                    )
+                    await self.step_execution_repo.skip_remaining(
+                        execution.id, failed_last.order
+                    )
                     await self.execution_repo.update(execution.mark_failed())
                     return
 
@@ -100,7 +112,9 @@ class RunNextStep:
 
             pending = await self._pending_step_execution(execution.id, next_step.id)
             if pending is None:
-                raise NotFoundAppError("Pending step execution not found for next pipeline step")
+                raise NotFoundAppError(
+                    "Pending step execution not found for next pipeline step"
+                )
 
             running = pending.mark_running()
             await self.step_execution_repo.update(running)

@@ -8,7 +8,11 @@ from src.application.use_cases.projects.link_environment import LinkEnvironment
 from src.domain.entities.server import Server
 from src.domain.value_objects.environment_type import EnvironmentType
 
-from tests.unit.application.fakes import MemoryEnvironmentRepo, MemoryProjectRepo, MemoryServerRepo
+from tests.unit.application.fakes import (
+    MemoryEnvironmentRepo,
+    MemoryProjectRepo,
+    MemoryServerRepo,
+)
 
 
 @pytest.mark.asyncio

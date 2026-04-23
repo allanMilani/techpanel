@@ -111,7 +111,9 @@ class MemoryExecutionRepo:
     ) -> Execution | None:
         return self.active_by_env.get(environment_id)
 
-    def set_active_for_env(self, environment_id: UUID, execution: Execution | None) -> None:
+    def set_active_for_env(
+        self, environment_id: UUID, execution: Execution | None
+    ) -> None:
         if execution is None:
             self.active_by_env.pop(environment_id, None)
         else:
@@ -243,7 +245,9 @@ class MemoryPipelineRepo:
         return self.pipelines.get(pipeline_id)
 
     async def list_by_environment(self, environment_id: UUID) -> list[Pipeline]:
-        return [p for p in self.pipelines.values() if p.environment_id == environment_id]
+        return [
+            p for p in self.pipelines.values() if p.environment_id == environment_id
+        ]
 
     async def delete(self, pipeline_id: UUID) -> None:
         self.pipelines.pop(pipeline_id, None)

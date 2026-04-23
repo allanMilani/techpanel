@@ -2,6 +2,7 @@ from functools import lru_cache
 from pydantic import Field, PostgresDsn, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -19,13 +20,17 @@ class Settings(BaseSettings):
 
     jwt_secret_key: str = Field(default="secret", alias="JWT_SECRET_KEY")
     jwt_algorithm: str = Field(default="HS256", alias="JWT_ALGORITHM")
-    jwt_access_token_expire_minutes: int = Field(default=30, alias="JWT_ACCESS_TOKEN_EXPIRE_MINUTES")
+    jwt_access_token_expire_minutes: int = Field(
+        default=30, alias="JWT_ACCESS_TOKEN_EXPIRE_MINUTES"
+    )
 
     fernet_key: str = Field(default="secret", alias="FERNET_KEY")
 
     github_client_id: str | None = Field(default=None, alias="GITHUB_CLIENT_ID")
     github_client_secret: str | None = Field(default=None, alias="GITHUB_CLIENT_SECRET")
-    github_oauth_callback_url: str | None = Field(default=None, alias="GITHUB_OAUTH_CALLBACK_URL")
+    github_oauth_callback_url: str | None = Field(
+        default=None, alias="GITHUB_OAUTH_CALLBACK_URL"
+    )
 
     @computed_field
     @property

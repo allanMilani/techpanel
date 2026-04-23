@@ -3,7 +3,11 @@ from uuid import uuid4
 import pytest
 
 from src.application import NotFoundAppError, ValidationAppError
-from src.application.dtos import AddStepInputDTO, CreatePipelineInputDTO, ReorderStepsInputDTO
+from src.application.dtos import (
+    AddStepInputDTO,
+    CreatePipelineInputDTO,
+    ReorderStepsInputDTO,
+)
 from src.application.use_cases.pipelines.add_step import AddStep
 from src.application.use_cases.pipelines.create_pipeline import CreatePipeline
 from src.application.use_cases.pipelines.reorder_steps import ReorderSteps

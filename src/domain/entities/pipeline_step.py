@@ -5,6 +5,7 @@ from src.domain.errors import ValidationError
 from src.domain.value_objects.step_type import StepType
 from src.domain.value_objects.on_failure_policy import OnFailurePolicy
 
+
 @dataclass(slots=True, frozen=True)
 class PipelineStep:
     id: UUID
@@ -20,17 +21,17 @@ class PipelineStep:
 
     @staticmethod
     def create(
-        pipeline_id: str, 
-        order: int, 
-        name: str, 
-        step_type: StepType, 
-        command: str, 
-        on_failure: OnFailurePolicy
+        pipeline_id: str,
+        order: int,
+        name: str,
+        step_type: StepType,
+        command: str,
+        on_failure: OnFailurePolicy,
     ) -> "PipelineStep":
 
         if not pipeline_id:
             raise ValidationError("Pipeline ID is required")
-        
+
         if not order:
             raise ValidationError("Order is required")
 
@@ -48,7 +49,7 @@ class PipelineStep:
 
         if order < 1:
             raise ValidationError("Order must be greater than or equal to 1")
-            
+
         return PipelineStep(
             id=uuid4(),
             pipeline_id=UUID(pipeline_id),

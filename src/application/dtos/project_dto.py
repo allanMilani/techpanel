@@ -1,12 +1,14 @@
 from dataclasses import dataclass
 from uuid import UUID
 
+
 @dataclass(slots=True, frozen=True)
 class CreateProjectInputDTO:
     name: str
     repo_github: str
     tech_stack: str
     created_by: UUID
+
 
 @dataclass(slots=True, frozen=True)
 class ProjectOutputDTO:
@@ -15,6 +17,7 @@ class ProjectOutputDTO:
     repo_github: str
     tech_stack: str
     created_by: UUID
+
 
 @dataclass(slots=True, frozen=True)
 class LinkEnvironmentInputDTO:

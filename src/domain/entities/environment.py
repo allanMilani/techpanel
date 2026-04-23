@@ -4,6 +4,7 @@ from uuid import UUID, uuid4
 from src.domain.errors import ValidationError
 from src.domain.value_objects.environment_type import EnvironmentType
 
+
 @dataclass(slots=True, frozen=True)
 class Environment:
     id: UUID
@@ -16,11 +17,11 @@ class Environment:
 
     @staticmethod
     def create(
-        project_id: str, 
-        name: str, 
-        environment_type: EnvironmentType, 
-        server_id: str, 
-        working_directory: str
+        project_id: str,
+        name: str,
+        environment_type: EnvironmentType,
+        server_id: str,
+        working_directory: str,
     ) -> "Environment":
         if not project_id:
             raise ValidationError("Project ID is required")
@@ -30,7 +31,7 @@ class Environment:
 
         if not environment_type:
             raise ValidationError("Environment type is required")
-        
+
         if not server_id:
             raise ValidationError("Server ID is required")
 

@@ -3,6 +3,7 @@ from uuid import UUID
 
 from src.domain.entities.user import User
 
+
 class IUserRepository(ABC):
     @abstractmethod
     async def create(self, user: User) -> User:

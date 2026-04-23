@@ -10,5 +10,4 @@ class INotificationService(ABC):
         self,
         execution: Execution,
         failed_step: StepExecution | None,
-    ) -> None:
-        ...
+    ) -> None: ...

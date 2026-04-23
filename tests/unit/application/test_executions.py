@@ -127,7 +127,9 @@ async def test_run_next_step_notify_and_stop_requires_service() -> None:
 
     start = StartExecution(pipe_repo, exec_repo, step_repo)
     started = await start.execute(
-        StartExecutionInputDTO(pipeline_id=p.id, triggered_by=uuid4(), branch_or_tag="main")
+        StartExecutionInputDTO(
+            pipeline_id=p.id, triggered_by=uuid4(), branch_or_tag="main"
+        )
     )
 
     run = RunNextStep(
@@ -159,7 +161,9 @@ async def test_run_next_step_notify_and_stop_with_service() -> None:
     notifier = FakeNotificationService()
 
     started = await StartExecution(pipe_repo, exec_repo, step_repo).execute(
-        StartExecutionInputDTO(pipeline_id=p.id, triggered_by=uuid4(), branch_or_tag="main")
+        StartExecutionInputDTO(
+            pipeline_id=p.id, triggered_by=uuid4(), branch_or_tag="main"
+        )
     )
 
     run = RunNextStep(
@@ -193,7 +197,9 @@ async def test_get_execution_logs_maps_dtos() -> None:
     exec_repo = MemoryExecutionRepo()
     step_repo = MemoryStepExecutionRepo()
     started = await StartExecution(pipe_repo, exec_repo, step_repo).execute(
-        StartExecutionInputDTO(pipeline_id=p.id, triggered_by=uuid4(), branch_or_tag="main")
+        StartExecutionInputDTO(
+            pipeline_id=p.id, triggered_by=uuid4(), branch_or_tag="main"
+        )
     )
 
     logs = GetExecutionLogs(exec_repo, step_repo)
@@ -210,7 +216,9 @@ async def test_get_history_maps_dtos() -> None:
     exec_repo = MemoryExecutionRepo()
     step_repo = MemoryStepExecutionRepo()
     started = await StartExecution(pipe_repo, exec_repo, step_repo).execute(
-        StartExecutionInputDTO(pipeline_id=p.id, triggered_by=uuid4(), branch_or_tag="main")
+        StartExecutionInputDTO(
+            pipeline_id=p.id, triggered_by=uuid4(), branch_or_tag="main"
+        )
     )
 
     hist = GetHistory(exec_repo)

@@ -4,11 +4,7 @@ from src.domain.entities.server import Server
 
 
 class CreateServer:
-    def __init__(
-        self,
-        server_repo: IServerRepository,
-        key_cipher
-    ) -> None:
+    def __init__(self, server_repo: IServerRepository, key_cipher) -> None:
         self.server_repo = server_repo
         self.key_cipher = key_cipher
 
