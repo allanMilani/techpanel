@@ -1,10 +1,12 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from fastapi import Depends, FastAPI
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-from src.infrastructure.persistence.database import get_db_session, get_engine
+
+from src.infrastructure.persistence.database import get_engine
+from src.interfaces import api_router
+from src.interfaces.api.error_handler import register_error_handlers
 
 
 @asynccontextmanager
@@ -16,13 +18,14 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(title="TechPanel", lifespan=lifespan)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.get("/health")
-async def health() -> dict[str, str]:
-    return {"status": "ok"}
+register_error_handlers(app)
 
-
-@app.get("/health/db")
-async def health_db(session: AsyncSession = Depends(get_db_session)) -> dict[str, str]:
-    await session.execute(text("SELECT 1"))
-    return {"status": "ok", "database": "connected"}
+app.include_router(api_router, prefix="/api")

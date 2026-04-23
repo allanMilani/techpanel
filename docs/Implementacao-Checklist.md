@@ -89,12 +89,13 @@ Documento operacional para acompanhar o desenvolvimento do projeto **TechPanel**
 
 **Objetivo:** FastAPI enxuto, composição na borda.
 
-- [ ] `src/interfaces/api/dependencies.py` (ou equivalente): providers de sessão, repositórios, use cases  
-- [ ] `error_handler` padronizando JSON de erro  
-- [ ] Prefixo `/api` nas rotas REST conforme doc  
-- [ ] CORS e trust proxy **(opcional)** se houver front separado  
+- [x] `src/interfaces/api/dependencies.py` (ou equivalente): providers de sessão, repositórios, use cases  
+- [x] `error_handler` padronizando JSON de erro  
+- [x] Prefixo `/api` nas rotas REST conforme doc  
+- [x] CORS e trust proxy **(opcional)** se houver front separado  
 
-**Critério de pronto:** rota autenticada de exemplo usando `Depends` sem lógica de negócio no router.
+**Critério de pronto:** composição via `Depends` em rotas base (`/health`, `/health/db`, `/auth/login`) sem lógica de negócio no router.  
+**Nota:** rota autenticada de exemplo (ex.: `/me`) foi adiada para a Etapa 6 por decisão de escopo.
 
 ---
 
