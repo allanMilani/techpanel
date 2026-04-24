@@ -142,10 +142,10 @@ Documento operacional para acompanhar o desenvolvimento do projeto **TechPanel**
 
 **Objetivo:** pipeline configurável por ambiente.
 
-- [ ] CRUD pipeline por `environment_id`  
-- [ ] CRUD passos; tipos iniciais: `ssh_command`, `http_healthcheck`, `notify_webhook`  
-- [ ] Reordenação de passos (`order` consistente)  
-- [ ] Campos: nome, tipo, comando, `working_directory` opcional, `timeout_seconds`, `on_failure`, `is_active`  
+- [x] CRUD pipeline por `environment_id`  
+- [x] CRUD passos; tipos iniciais: `ssh_command`, `http_healthcheck`, `notify_webhook`  
+- [x] Reordenação de passos (`order` consistente)  
+- [x] Campos: nome, tipo, comando, `working_directory` opcional, `timeout_seconds`, `on_failure`, `is_active`  
 
 **Critério de pronto:** pipeline com ≥ 3 passos salvo, reordenado e relido corretamente.
 

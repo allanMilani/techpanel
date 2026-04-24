@@ -23,6 +23,9 @@ class AddStep:
             step_type=StepType(dto.step_type),
             command=dto.command,
             on_failure=OnFailurePolicy(dto.on_failure),
+            timeout_seconds=dto.timeout_seconds,
+            working_directory=dto.working_directory,
+            is_active=True,
         )
 
         created = await self.pipeline_repo.add_step(step)

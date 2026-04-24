@@ -27,6 +27,9 @@ class PipelineStep:
         step_type: StepType,
         command: str,
         on_failure: OnFailurePolicy,
+        timeout_seconds: int = 300,
+        working_directory: str | None = None,
+        is_active: bool = True,
     ) -> "PipelineStep":
 
         if not pipeline_id:
@@ -50,6 +53,16 @@ class PipelineStep:
         if order < 1:
             raise ValidationError("Order must be greater than or equal to 1")
 
+        if timeout_seconds < 1:
+            raise ValidationError("Timeout must be greater than or equal to 1")
+
+        if (
+            working_directory is not None
+            and working_directory.strip()
+            and not working_directory.startswith("/")
+        ):
+            raise ValidationError("Working directory must start with a slash")
+
         return PipelineStep(
             id=uuid4(),
             pipeline_id=UUID(pipeline_id),
@@ -58,4 +71,7 @@ class PipelineStep:
             step_type=step_type,
             command=command.strip(),
             on_failure=on_failure,
+            timeout_seconds=timeout_seconds,
+            working_directory=working_directory.strip() if working_directory else None,
+            is_active=is_active,
         )

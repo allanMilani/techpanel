@@ -52,6 +52,23 @@ class ReorderStepsInputDTO:
     ordered_step_ids: list[UUID]
 
 
+@dataclass(slots=True, frozen=True)
+class UpdatePipelineInputDTO:
+    name: str
+    description: str | None
+
+
+@dataclass(slots=True, frozen=True)
+class UpdateStepInputDTO:
+    name: str
+    step_type: str
+    command: str
+    on_failure: str
+    timeout_seconds: int
+    working_directory: str | None
+    is_active: bool
+
+
 def pipeline_step_to_output_dto(step: PipelineStep) -> PipelineOutputDTO:
     return PipelineOutputDTO(
         id=step.id,

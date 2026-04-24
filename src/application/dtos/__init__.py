@@ -15,6 +15,8 @@ from src.application.dtos.pipeline_dto import (
     ReorderStepsInputDTO,
     pipeline_step_to_output_dto,
     pipeline_to_summary_dto,
+    UpdatePipelineInputDTO,
+    UpdateStepInputDTO,
 )
 from src.application.dtos.project_dto import (
     CreateProjectInputDTO,
@@ -53,4 +55,6 @@ __all__ = [
     "execution_to_output_dto",
     "step_execution_to_output_dto",
     "UpdateServerInputDTO",
+    "UpdatePipelineInputDTO",
+    "UpdateStepInputDTO",
 ]

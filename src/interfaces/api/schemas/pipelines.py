@@ -1,0 +1,56 @@
+from uuid import UUID
+
+from pydantic import BaseModel, Field
+
+
+class PipelineCreateRequest(BaseModel):
+    name: str
+    description: str | None = None
+
+
+class PipelineUpdateRequest(BaseModel):
+    name: str
+    description: str | None = None
+
+
+class PipelineResponse(BaseModel):
+    id: UUID
+    environment_id: UUID
+    name: str
+    description: str | None = None
+
+
+class StepCreateRequest(BaseModel):
+    order: int = Field(ge=1)
+    name: str
+    step_type: str
+    command: str
+    on_failure: str
+    timeout_seconds: int = Field(default=300, ge=1)
+    working_directory: str | None = None
+
+
+class StepUpdateRequest(BaseModel):
+    name: str
+    step_type: str
+    command: str
+    on_failure: str
+    timeout_seconds: int = Field(ge=1)
+    working_directory: str | None = None
+    is_active: bool
+
+
+class StepResponse(BaseModel):
+    id: UUID
+    order: int
+    name: str
+    step_type: str
+    command: str
+    on_failure: str
+    timeout_seconds: int
+    working_directory: str | None
+    is_active: bool
+
+
+class ReorderStepsRequest(BaseModel):
+    ordered_step_ids: list[UUID]

@@ -14,6 +14,15 @@ from src.interfaces.api.schemas.project_schemas import (
     ProjectResponse,
     ProjectUpdateBody,
 )
+from src.interfaces.api.schemas.pipelines import (
+    PipelineCreateRequest,
+    PipelineResponse,
+    PipelineUpdateRequest,
+    ReorderStepsRequest,
+    StepCreateRequest,
+    StepResponse,
+    StepUpdateRequest,
+)
 from src.interfaces.api.schemas.servers import (
     ServerCreateRequest,
     ServerResponse,
@@ -37,4 +46,11 @@ __all__ = [
     "EnvironmentUpdateBody",
     "EnvironmentResponse",
     "ErrorResponse",
+    "PipelineCreateRequest",
+    "PipelineResponse",
+    "PipelineUpdateRequest",
+    "ReorderStepsRequest",
+    "StepCreateRequest",
+    "StepResponse",
+    "StepUpdateRequest",
 ]

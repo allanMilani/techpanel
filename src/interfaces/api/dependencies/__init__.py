@@ -36,6 +36,18 @@ from src.interfaces.api.dependencies.projects import (
     get_update_project,
 )
 
+from src.interfaces.api.dependencies.pipelines import (
+    get_add_step_use_case,
+    get_create_pipeline_use_case,
+    get_delete_pipeline_use_case,
+    get_delete_step_use_case,
+    get_get_pipeline_use_case,
+    get_list_pipelines_use_case,
+    get_reorder_steps_use_case,
+    get_update_pipeline_use_case,
+    get_update_step_use_case,
+)
+
 __all__ = [
     "CurrentUser",
     "get_current_user",
@@ -66,4 +78,13 @@ __all__ = [
     "get_link_environment",
     "get_list_project_environments",
     "get_update_environment",
+    "get_create_pipeline_use_case",
+    "get_list_pipelines_use_case",
+    "get_get_pipeline_use_case",
+    "get_update_pipeline_use_case",
+    "get_delete_pipeline_use_case",
+    "get_add_step_use_case",
+    "get_update_step_use_case",
+    "get_delete_step_use_case",
+    "get_reorder_steps_use_case",
 ]
