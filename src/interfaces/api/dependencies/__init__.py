@@ -7,8 +7,10 @@ from src.interfaces.api.dependencies.auth import (
     require_admin,
 )
 from src.interfaces.api.dependencies.core import (
+    get_environment_repository,
     get_execution_repository,
     get_pipeline_repository,
+    get_project_repository,
     get_server_repository,
     get_step_execution_repository,
     get_user_repository,
@@ -23,6 +25,16 @@ from src.interfaces.api.dependencies.servers import (
     get_ssh_service,
     get_update_server_use_case,
 )
+from src.interfaces.api.dependencies.projects import (
+    get_create_project,
+    get_delete_project,
+    get_get_project,
+    get_link_environment,
+    get_list_project_environments,
+    get_list_projects,
+    get_update_environment,
+    get_update_project,
+)
 
 __all__ = [
     "CurrentUser",
@@ -33,6 +45,8 @@ __all__ = [
     "get_login_use_case",
     "get_user_repository",
     "get_server_repository",
+    "get_project_repository",
+    "get_environment_repository",
     "get_pipeline_repository",
     "get_execution_repository",
     "get_step_execution_repository",
@@ -44,4 +58,12 @@ __all__ = [
     "get_update_server_use_case",
     "get_delete_server_use_case",
     "get_check_ssh_connection_use_case",
+    "get_create_project",
+    "get_list_projects",
+    "get_get_project",
+    "get_update_project",
+    "get_delete_project",
+    "get_link_environment",
+    "get_list_project_environments",
+    "get_update_environment",
 ]

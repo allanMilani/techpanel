@@ -4,6 +4,16 @@ from src.interfaces.api.schemas.executions import (
     ExecutionResponse,
     StartExecutionRequest,
 )
+from src.interfaces.api.schemas.environment_schemas import (
+    EnvironmentCreateBody,
+    EnvironmentResponse,
+    EnvironmentUpdateBody,
+)
+from src.interfaces.api.schemas.project_schemas import (
+    ProjectCreateBody,
+    ProjectResponse,
+    ProjectUpdateBody,
+)
 from src.interfaces.api.schemas.servers import (
     ServerCreateRequest,
     ServerResponse,
@@ -20,5 +30,11 @@ __all__ = [
     "ServerUpdateRequest",
     "ServerResponse",
     "TestConnectionResponse",
+    "ProjectCreateBody",
+    "ProjectUpdateBody",
+    "ProjectResponse",
+    "EnvironmentCreateBody",
+    "EnvironmentUpdateBody",
+    "EnvironmentResponse",
     "ErrorResponse",
 ]

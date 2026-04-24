@@ -20,6 +20,8 @@ from src.application.dtos.project_dto import (
     CreateProjectInputDTO,
     LinkEnvironmentInputDTO,
     ProjectOutputDTO,
+    UpdateEnvironmentInputDTO,
+    UpdateProjectInputDTO,
 )
 from src.application.dtos.server_dto import (
     CreateServerInputDTO,
@@ -35,6 +37,8 @@ __all__ = [
     "CreateProjectInputDTO",
     "ProjectOutputDTO",
     "LinkEnvironmentInputDTO",
+    "UpdateProjectInputDTO",
+    "UpdateEnvironmentInputDTO",
     "CreatePipelineInputDTO",
     "AddStepInputDTO",
     "ReorderStepsInputDTO",

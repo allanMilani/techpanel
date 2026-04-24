@@ -130,9 +130,9 @@ Documento operacional para acompanhar o desenvolvimento do projeto **TechPanel**
 
 **Objetivo:** múltiplos ambientes por projeto.
 
-- [ ] CRUD projeto (`repo_github`, `tech_stack` livre)  
-- [ ] Vincular N ambientes: servidor + `working_directory` + tipo (`production` / `staging` / `custom`)  
-- [ ] Validações: ambiente ativo/inativo; servidor existente  
+- [x] CRUD projeto (`repo_github`, `tech_stack` livre)  
+- [x] Vincular N ambientes: servidor + `working_directory` + tipo (`production` / `staging` / `custom`)  
+- [x] Validações: ambiente ativo/inativo; servidor existente  
 
 **Critério de pronto:** fluxo “projeto → dois ambientes (stg/prod)” persistido e consultável via API.
 
@@ -222,4 +222,4 @@ Documento operacional para acompanhar o desenvolvimento do projeto **TechPanel**
 - Itens **(opcional)** podem ser movidos para um arquivo de backlog se poluírem o MVP.  
 - Data da última revisão: preencher abaixo.
 
-**Última revisão:** 2026-04-23
+**Última revisão:** 2026-04-24

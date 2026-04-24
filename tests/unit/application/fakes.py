@@ -213,6 +213,9 @@ class MemoryEnvironmentRepo:
     async def get_by_id(self, environment_id: UUID) -> Environment | None:
         return self.items.get(environment_id)
 
+    async def list_by_project(self, project_id: UUID) -> list[Environment]:
+        return [env for env in self.items.values() if env.project_id == project_id]
+
     async def list_by_pipeline(self, pipeline_id: UUID) -> list[Environment]:
         return []
 

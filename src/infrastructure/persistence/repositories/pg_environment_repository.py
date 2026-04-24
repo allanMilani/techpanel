@@ -53,6 +53,14 @@ class PgEnvironmentRepository(IEnvironmentRepository):
         row = result.scalar_one_or_none()
         return environment_model_to_entity(row) if row else None
 
+    async def list_by_project(self, project_id: UUID) -> list[Environment]:
+        result = await self._session.execute(
+            select(EnvironmentModel)
+            .where(EnvironmentModel.project_id == project_id)
+            .order_by(EnvironmentModel.name.asc())
+        )
+        return [environment_model_to_entity(row) for row in result.scalars().all()]
+
     async def list_by_pipeline(self, pipeline_id: UUID) -> list[Environment]:
         pipeline_project_result = await self._session.execute(
             select(EnvironmentModel.project_id)

@@ -15,6 +15,9 @@ class IEnvironmentRepository(ABC):
     async def get_by_id(self, environment_id: UUID) -> Environment | None: ...
 
     @abstractmethod
+    async def list_by_project(self, project_id: UUID) -> list[Environment]: ...
+
+    @abstractmethod
     async def list_by_pipeline(self, pipeline_id: UUID) -> list[Environment]: ...
 
     @abstractmethod
