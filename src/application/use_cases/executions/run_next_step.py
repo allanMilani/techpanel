@@ -7,7 +7,8 @@ from src.domain.ports.repositories import (
     IPipelineRepository,
     IStepExecutionRepository,
 )
-from src.domain.ports.services import INotificationService
+from src.domain.ports.services import INotificationService, IRunnerRegistry
+from src.domain.value_objects.execution_status import ExecutionStatus
 from src.domain.value_objects.on_failure_policy import OnFailurePolicy
 from src.domain.value_objects.step_execution_status import StepExecutionStatus
 
@@ -18,7 +19,7 @@ class RunNextStep:
         execution_repo: IExecutionRepository,
         step_execution_repo: IStepExecutionRepository,
         pipeline_repo: IPipelineRepository,
-        runner_registry,
+        runner_registry: IRunnerRegistry,
         notification_service: INotificationService | None = None,
     ) -> None:
         self.execution_repo = execution_repo
@@ -44,6 +45,8 @@ class RunNextStep:
             execution = await self.execution_repo.get_by_id(dto.execution_id)
             if execution is None:
                 raise NotFoundAppError("Execution not found")
+            if execution.status == ExecutionStatus.PENDING:
+                execution = await self.execution_repo.update(execution.mark_running())
 
             all_step_execs = await self.step_execution_repo.list_by_execution(
                 dto.execution_id

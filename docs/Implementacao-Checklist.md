@@ -155,12 +155,12 @@ Documento operacional para acompanhar o desenvolvimento do projeto **TechPanel**
 
 **Objetivo:** sequência estrita; falhas e `skipped` conforme política.
 
-- [ ] `StartExecution`: cria `execution` + `step_executions` em `pending`  
-- [ ] Lock por projeto: nova execução retorna **409** se houver processo ativo (doc)  
-- [ ] `RunNextStep` / motor: só avança após sucesso; `stop` / `continue` / `notify_and_stop`  
-- [ ] `RunnerRegistry` + implementações infra dos runners  
-- [ ] Persistir `log_output`, `exit_code`, timestamps por passo  
-- [ ] Atualização de status da execução global (`success` / `failed` / …)  
+- [x] `StartExecution`: cria `execution` + `step_executions` em `pending`  
+- [x] Lock por projeto: nova execução retorna **409** se houver processo ativo (doc)  
+- [x] `RunNextStep` / motor: só avança após sucesso; `stop` / `continue` / `notify_and_stop`  
+- [x] `RunnerRegistry` + implementações infra dos runners  
+- [x] Persistir `log_output`, `exit_code`, timestamps por passo  
+- [x] Atualização de status da execução global (`success` / `failed` / …)  
 
 **Critério de pronto:** pipeline de teste com `http_healthcheck` + `ssh_command` simulado **ou** ambiente de staging real executa ponta a ponta sem passos paralelos indevidos.
 
@@ -222,4 +222,4 @@ Documento operacional para acompanhar o desenvolvimento do projeto **TechPanel**
 - Itens **(opcional)** podem ser movidos para um arquivo de backlog se poluírem o MVP.  
 - Data da última revisão: preencher abaixo.
 
-**Última revisão:** 2026-04-24
+**Última revisão:** 2026-04-26

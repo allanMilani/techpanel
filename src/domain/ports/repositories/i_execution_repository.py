@@ -21,3 +21,8 @@ class IExecutionRepository(ABC):
     async def get_active_execution_for_environment(
         self, environment_id: UUID
     ) -> Execution | None: ...
+
+    @abstractmethod
+    async def get_active_execution_for_project(
+        self, project_id: UUID
+    ) -> Execution | None: ...

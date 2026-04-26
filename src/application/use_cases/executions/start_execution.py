@@ -3,6 +3,7 @@ from src.application.dtos import ExecutionOutputDTO, StartExecutionInputDTO
 from src.application.dtos.execution_dto import execution_to_output_dto
 from src.domain.entities import Execution, StepExecution
 from src.domain.ports.repositories import (
+    IEnvironmentRepository,
     IExecutionRepository,
     IPipelineRepository,
     IStepExecutionRepository,
@@ -13,10 +14,12 @@ class StartExecution:
     def __init__(
         self,
         pipeline_repo: IPipelineRepository,
+        environment_repo: IEnvironmentRepository,
         execution_repo: IExecutionRepository,
         step_execution_repo: IStepExecutionRepository,
     ) -> None:
         self.pipeline_repo = pipeline_repo
+        self.environment_repo = environment_repo
         self.execution_repo = execution_repo
         self.step_execution_repo = step_execution_repo
 
@@ -25,11 +28,14 @@ class StartExecution:
         if pipeline is None:
             raise NotFoundAppError("Pipeline not found")
 
-        active = await self.execution_repo.get_active_execution_for_environment(
-            pipeline.environment_id
-        )
+        environments = await self.environment_repo.list_by_pipeline(dto.pipeline_id)
+        environment = next((e for e in environments if e.id == pipeline.environment_id), None)
+        if environment is None:
+            raise NotFoundAppError("Environment not found for pipeline")
+
+        active = await self.execution_repo.get_active_execution_for_project(environment.project_id)
         if active is not None:
-            raise ConflictAppError("Execution already running for this environment")
+            raise ConflictAppError("Execution already running for this project")
 
         execution = Execution.create(
             pipeline_id=str(dto.pipeline_id),

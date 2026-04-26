@@ -15,7 +15,14 @@ from src.interfaces.api.dependencies.core import (
     get_step_execution_repository,
     get_user_repository,
 )
-from src.interfaces.api.dependencies.executions import get_start_execution_use_case
+from src.interfaces.api.dependencies.executions import (
+    get_run_next_step_use_case,
+    get_start_execution_use_case,
+)
+from src.interfaces.api.dependencies.runners import (
+    get_notification_service,
+    get_runner_registry,
+)
 from src.interfaces.api.dependencies.servers import (
     get_check_ssh_connection_use_case,
     get_create_server_use_case,
@@ -63,6 +70,9 @@ __all__ = [
     "get_execution_repository",
     "get_step_execution_repository",
     "get_start_execution_use_case",
+    "get_run_next_step_use_case",
+    "get_runner_registry",
+    "get_notification_service",
     "get_key_cipher",
     "get_ssh_service",
     "get_create_server_use_case",

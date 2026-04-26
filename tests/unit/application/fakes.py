@@ -111,6 +111,17 @@ class MemoryExecutionRepo:
     ) -> Execution | None:
         return self.active_by_env.get(environment_id)
 
+    async def get_active_execution_for_project(self, project_id: UUID) -> Execution | None:
+        _ = project_id
+        return next(
+            (
+                execution
+                for execution in self.items.values()
+                if execution.status.value in {"pending", "running", "blocked"}
+            ),
+            None,
+        )
+
     def set_active_for_env(
         self, environment_id: UUID, execution: Execution | None
     ) -> None:
@@ -118,6 +129,14 @@ class MemoryExecutionRepo:
             self.active_by_env.pop(environment_id, None)
         else:
             self.active_by_env[environment_id] = execution
+
+    async def get_active_execution_for_project(self, project_id: UUID) -> Execution | None:
+        _ = project_id
+        # Para testes unitários de StartExecution, você pode configurar esse comportamento por fixture.
+        return next(
+            (e for e in self.items.values() if e.status.value in {"pending", "running", "blocked"}),
+            None,
+        )
 
 
 class MemoryStepExecutionRepo:
@@ -217,7 +236,8 @@ class MemoryEnvironmentRepo:
         return [env for env in self.items.values() if env.project_id == project_id]
 
     async def list_by_pipeline(self, pipeline_id: UUID) -> list[Environment]:
-        return []
+        _ = pipeline_id
+        return list(self.items.values())
 
     async def get_active_by_project(self, project_id: UUID) -> Environment | None:
         return None

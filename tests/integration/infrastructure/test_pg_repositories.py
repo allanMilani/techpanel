@@ -1,4 +1,5 @@
 import pytest
+from dataclasses import replace
 from uuid import uuid4
 
 from src.application.dtos import (
@@ -21,7 +22,8 @@ from src.application.use_cases.pipelines.create_pipeline import CreatePipeline
 from src.application.use_cases.projects.create_project import CreateProject
 from src.application.use_cases.projects.link_environment import LinkEnvironment
 from src.application.use_cases.servers.create_server import CreateServer
-from src.domain.entities import Pipeline, User
+from src.domain.entities import Environment, Pipeline, User
+from src.domain.value_objects.environment_type import EnvironmentType
 from src.domain.value_objects.execution_status import ExecutionStatus
 from src.domain.value_objects.on_failure_policy import OnFailurePolicy
 from src.domain.value_objects.step_execution_status import StepExecutionStatus
@@ -138,6 +140,7 @@ async def test_integration_deploy_flow_with_fakes() -> None:
 
     started = await StartExecution(
         pipeline_repo=pipeline_repo,
+        environment_repo=environment_repo,
         execution_repo=execution_repo,
         step_execution_repo=step_execution_repo,
     ).execute(
@@ -172,6 +175,7 @@ async def test_integration_deploy_flow_with_fakes() -> None:
 async def test_integration_notify_and_stop_with_fakes() -> None:
     user_repo = MemoryUserRepo()
     pipeline_repo = MemoryPipelineRepo()
+    environment_repo = MemoryEnvironmentRepo()
     execution_repo = MemoryExecutionRepo()
     step_execution_repo = MemoryStepExecutionRepo()
     notification_service = FakeNotificationService()
@@ -186,6 +190,15 @@ async def test_integration_notify_and_stop_with_fakes() -> None:
     pipeline = await pipeline_repo.create(
         Pipeline.create(name="deploy", environment_id=str(uuid4()), description=None)
     )
+    env = Environment.create(
+        project_id=str(uuid4()),
+        name="staging",
+        environment_type=EnvironmentType.STAGING,
+        server_id=str(uuid4()),
+        working_directory="/var/www/app",
+    )
+    env = replace(env, id=pipeline.environment_id)
+    await environment_repo.create(env)
     await AddStep(pipeline_repo).execute(
         AddStepInputDTO(
             pipeline_id=pipeline.id,
@@ -198,6 +211,7 @@ async def test_integration_notify_and_stop_with_fakes() -> None:
     )
     started = await StartExecution(
         pipeline_repo=pipeline_repo,
+        environment_repo=environment_repo,
         execution_repo=execution_repo,
         step_execution_repo=step_execution_repo,
     ).execute(

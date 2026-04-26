@@ -18,4 +18,6 @@ def step_execution_model_to_entity(row: StepExecutionModel) -> StepExecution:
         ),
         log_output=row.log_output,
         exit_code=row.exit_code,
+        started_at=row.started_at,
+        finished_at=row.finished_at,
     )

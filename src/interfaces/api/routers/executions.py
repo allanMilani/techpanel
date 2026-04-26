@@ -8,6 +8,9 @@ from src.application.use_cases.executions.start_execution import StartExecution
 from src.interfaces.api.dependencies import CurrentUser, require_admin
 from src.interfaces.api.schemas import StartExecutionRequest, ExecutionResponse
 from src.interfaces.api.dependencies import get_start_execution_use_case
+from src.application.dtos import RunNextStepInputDTO
+from src.application.use_cases.executions.run_next_step import RunNextStep
+from src.interfaces.api.dependencies import get_run_next_step_use_case
 
 router = APIRouter(prefix="/executions", tags=["executions"])
 
@@ -34,3 +37,14 @@ async def start_execution(
         branch_or_tag=out.branch_or_tag,
         status=out.status,
     )
+
+@router.post(
+    "/{execution_id}/next-step",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def run_next_step(
+    execution_id: UUID,
+    _current_user: Annotated[CurrentUser, Depends(require_admin)],
+    use_case: Annotated[RunNextStep, Depends(get_run_next_step_use_case)],
+) -> None:
+    await use_case.execute(RunNextStepInputDTO(execution_id=execution_id))

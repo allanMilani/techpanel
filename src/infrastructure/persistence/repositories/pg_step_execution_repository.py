@@ -26,6 +26,8 @@ class PgStepExecutionRepository(IStepExecutionRepository):
                 status=step.status.value,
                 log_output=step.log_output,
                 exit_code=step.exit_code,
+                started_at=step.started_at,
+                finished_at=step.finished_at,
             )
             for step in steps
         ]
@@ -44,6 +46,8 @@ class PgStepExecutionRepository(IStepExecutionRepository):
         row.status = step_execution.status.value
         row.log_output = step_execution.log_output
         row.exit_code = step_execution.exit_code
+        row.started_at = step_execution.started_at
+        row.finished_at = step_execution.finished_at
         await self._session.flush()
         return step_execution_model_to_entity(row)
 

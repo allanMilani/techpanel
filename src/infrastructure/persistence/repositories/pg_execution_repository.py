@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.domain.entities import Execution
 from src.domain.ports.repositories import IExecutionRepository
 from src.infrastructure.persistence.mappers import execution_model_to_entity
-from src.infrastructure.persistence.models import ExecutionModel, PipelineModel
+from src.infrastructure.persistence.models import ExecutionModel, PipelineModel, EnvironmentModel
 from src.infrastructure.persistence.models.enums import (
     ExecutionStatus as ExecutionStatusModel,
 )
@@ -72,6 +72,21 @@ class PgExecutionRepository(IExecutionRepository):
             select(ExecutionModel)
             .join(PipelineModel, PipelineModel.id == ExecutionModel.pipeline_id)
             .where(PipelineModel.environment_id == environment_id)
+            .where(ExecutionModel.status.in_(ACTIVE_EXECUTION_STATUSES))
+            .order_by(ExecutionModel.id.desc())
+            .limit(1)
+        )
+        row = result.scalar_one_or_none()
+        return execution_model_to_entity(row) if row else None
+
+    async def get_active_execution_for_project(
+        self, project_id: UUID
+    ) -> Execution | None:
+        result = await self._session.execute(
+            select(ExecutionModel)
+            .join(PipelineModel, PipelineModel.id == ExecutionModel.pipeline_id)
+            .join(EnvironmentModel, EnvironmentModel.id == PipelineModel.environment_id)
+            .where(EnvironmentModel.project_id == project_id)
             .where(ExecutionModel.status.in_(ACTIVE_EXECUTION_STATUSES))
             .order_by(ExecutionModel.id.desc())
             .limit(1)

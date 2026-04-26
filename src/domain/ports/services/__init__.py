@@ -6,6 +6,7 @@ from src.domain.ports.services.i_password_hasher import IPasswordHasher
 from src.domain.ports.services.i_token_service import ITokenService
 from src.domain.ports.services.i_token_service import TokenPayload
 from src.domain.ports.services.i_key_cipher import IKeyCipher
+from src.domain.ports.services.i_runner_registry import IRunnerRegistry
 
 __all__ = [
     "IGitHubService",
@@ -16,4 +17,5 @@ __all__ = [
     "ITokenService",
     "TokenPayload",
     "IKeyCipher",
+    "IRunnerRegistry",
 ]
