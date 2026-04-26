@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.infrastructure.persistence.database import get_engine
 from src.interfaces import api_router
 from src.interfaces.api.error_handler import register_error_handlers
+from src.interfaces.web.router import router as web_router
 
 
 @asynccontextmanager
@@ -29,3 +30,4 @@ app.add_middleware(
 register_error_handlers(app)
 
 app.include_router(api_router, prefix="/api")
+app.include_router(web_router)

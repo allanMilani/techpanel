@@ -3,6 +3,7 @@ from src.interfaces.api.dependencies.auth import (
     get_current_user,
     get_login_use_case,
     get_password_hasher,
+    get_register_user_use_case,
     get_token_service,
     require_admin,
 )
@@ -70,6 +71,7 @@ __all__ = [
     "get_password_hasher",
     "get_token_service",
     "get_login_use_case",
+    "get_register_user_use_case",
     "get_user_repository",
     "get_server_repository",
     "get_project_repository",

@@ -1,4 +1,9 @@
-from src.application.dtos.auth_dto import LoginInputDTO, LoginOutputDTO
+from src.application.dtos.auth_dto import (
+    LoginInputDTO,
+    LoginOutputDTO,
+    RegisterUserInputDTO,
+    RegisterUserOutputDTO,
+)
 from src.application.dtos.execution_dto import (
     ExecutionOutputDTO,
     RunNextStepInputDTO,
@@ -42,6 +47,8 @@ from src.application.dtos.github_dto import (
 __all__ = [
     "LoginInputDTO",
     "LoginOutputDTO",
+    "RegisterUserInputDTO",
+    "RegisterUserOutputDTO",
     "CreateServerInputDTO",
     "ServerOutputDTO",
     "CreateProjectInputDTO",

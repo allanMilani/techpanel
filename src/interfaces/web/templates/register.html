@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Cadastro | TechPanel{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-header">Cadastro</div>
+            <div class="card-body">
+                <form method="post" action="/register">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">E-mail</label>
+                        <input id="email" name="email" type="email" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Senha</label>
+                        <input id="password" name="password" type="password" class="form-control" minlength="8" required />
+                    </div>
+                    <button class="btn btn-primary w-100 mb-2" type="submit">Cadastrar</button>
+                    <a class="btn btn-outline-secondary w-100" href="/">Voltar para login</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

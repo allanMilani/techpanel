@@ -43,7 +43,7 @@ add: ## Adiciona pacote. Uso: make add PKG="httpx"
 # ----------------------------
 
 run: ## Sobe API em modo dev (reload)
-	uv run uvicorn $(APP_MODULE) --reload --host $(HOST) --port $(PORT)
+	uv run uvicorn $(APP_MODULE) --reload --reload-dir src --reload-dir tests --host $(HOST) --port $(PORT)
 
 health: ## Testa health endpoint
 	curl -fsS http://localhost:$(PORT)/health || true

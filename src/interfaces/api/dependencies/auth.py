@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import Depends, Header, HTTPException, status
 
 from src.application.use_cases.auth.login import Login
+from src.application.use_cases.auth.register_user import RegisterUser
 from src.domain.ports.repositories import IUserRepository
 from src.domain.ports.services import IPasswordHasher, ITokenService
 from src.infrastructure.config.settings import get_settings
@@ -40,6 +41,16 @@ def get_login_use_case(
         user_repo=user_repo,
         password_hasher=password_hasher,
         token_service=token_service,
+    )
+
+
+def get_register_user_use_case(
+    user_repo: Annotated[IUserRepository, Depends(get_user_repository)],
+    password_hasher: Annotated[IPasswordHasher, Depends(get_password_hasher)],
+) -> RegisterUser:
+    return RegisterUser(
+        user_repo=user_repo,
+        password_hasher=password_hasher,
     )
 
 

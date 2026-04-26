@@ -183,13 +183,13 @@ Documento operacional para acompanhar o desenvolvimento do projeto **TechPanel**
 
 **Objetivo:** interface web do TechPanel usável (seção 16 de [TechPanel.md](./TechPanel.md)).
 
-- [ ] `base.html`, layout, flash/alertas  
-- [ ] Login  
-- [ ] Telas: servidores, projetos/ambientes, pipelines, painel de execução  
-- [ ] Modal de confirmação padrão  
-- [ ] Modal reforçado para `production` (digitar `CONFIRMAR`)  
-- [ ] Polling ~2s no painel até execução terminal  
-- [ ] Histórico com indicação do passo que falhou  
+- [x] `base.html`, layout, flash/alertas  
+- [x] Login  
+- [x] Telas: servidores, projetos/ambientes, pipelines, painel de execução  
+- [x] Modal de confirmação padrão  
+- [x] Modal reforçado para `production` (digitar `CONFIRMAR`)  
+- [x] Polling ~2s no painel até execução terminal  
+- [x] Histórico com indicação do passo que falhou  
 
 **Critério de pronto:** fluxo feliz e fluxo de falha visíveis sem usar apenas API bruta.
 
