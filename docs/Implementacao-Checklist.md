@@ -170,10 +170,10 @@ Documento operacional para acompanhar o desenvolvimento do projeto **TechPanel**
 
 **Objetivo:** OAuth + seleção de branch/tag.
 
-- [ ] Aplicação OAuth GitHub configurada; callbacks em `.env`  
-- [ ] Fluxo de login/callback (state, CSRF)  
-- [ ] Integração PyGithub atrás do port (listar branches/tags por `owner/repo`)  
-- [ ] Não armazenar tokens em log  
+- [x] Aplicação OAuth GitHub configurada; callbacks em `.env`  
+- [x] Fluxo de login/callback (state, CSRF)  
+- [x] Integração PyGithub atrás do port (listar branches/tags por `owner/repo`)  
+- [x] Não armazenar tokens em log  
 
 **Critério de pronto:** usuário autenticado escolhe branch/tag exibida pela API antes de confirmar execução.
 

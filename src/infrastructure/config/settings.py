@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     github_oauth_callback_url: str | None = Field(
         default=None, alias="GITHUB_OAUTH_CALLBACK_URL"
     )
+    github_oauth_scope: str = Field(default="repo,read:org", alias="GITHUB_OAUTH_SCOPE")
 
     @computed_field
     @property

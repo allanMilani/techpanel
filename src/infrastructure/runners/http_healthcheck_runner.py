@@ -1,6 +1,7 @@
 import httpx
 from src.domain.entities.pipeline_step import PipelineStep
 
+
 class HttpHealthcheckRunner:
     async def run(self, step: PipelineStep) -> tuple[int, str]:
         url = step.command.strip()

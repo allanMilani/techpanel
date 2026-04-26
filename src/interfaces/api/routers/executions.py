@@ -38,6 +38,7 @@ async def start_execution(
         status=out.status,
     )
 
+
 @router.post(
     "/{execution_id}/next-step",
     status_code=status.HTTP_204_NO_CONTENT,

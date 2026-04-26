@@ -11,5 +11,7 @@ class RunnerRegistry(IRunnerRegistry):
     def get(self, step_type: StepType) -> IStepRunner:
         runner = self.runners.get(step_type)
         if runner is None:
-            raise ValidationAppError(f"No runner registered for step type: {step_type.value}")
+            raise ValidationAppError(
+                f"No runner registered for step type: {step_type.value}"
+            )
         return runner

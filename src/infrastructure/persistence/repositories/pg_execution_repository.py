@@ -8,7 +8,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.domain.entities import Execution
 from src.domain.ports.repositories import IExecutionRepository
 from src.infrastructure.persistence.mappers import execution_model_to_entity
-from src.infrastructure.persistence.models import ExecutionModel, PipelineModel, EnvironmentModel
+from src.infrastructure.persistence.models import (
+    ExecutionModel,
+    PipelineModel,
+    EnvironmentModel,
+)
 from src.infrastructure.persistence.models.enums import (
     ExecutionStatus as ExecutionStatusModel,
 )

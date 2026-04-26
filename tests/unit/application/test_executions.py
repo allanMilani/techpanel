@@ -27,15 +27,17 @@ from tests.unit.application.fakes import (
 )
 
 
-async def _build_environment_repo_for_pipeline(pipeline: Pipeline) -> MemoryEnvironmentRepo:
+async def _build_environment_repo_for_pipeline(
+    pipeline: Pipeline,
+) -> MemoryEnvironmentRepo:
     env_repo = MemoryEnvironmentRepo()
     env = Environment.create(
-            project_id=str(uuid4()),
-            name="staging",
-            environment_type=EnvironmentType.STAGING,
-            server_id=str(uuid4()),
-            working_directory="/var/www/app",
-        )
+        project_id=str(uuid4()),
+        name="staging",
+        environment_type=EnvironmentType.STAGING,
+        server_id=str(uuid4()),
+        working_directory="/var/www/app",
+    )
     env = replace(env, id=pipeline.environment_id)
     await env_repo.create(env)
     return env_repo

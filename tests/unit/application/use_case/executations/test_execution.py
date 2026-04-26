@@ -15,7 +15,6 @@ from src.domain.value_objects.on_failure_policy import OnFailurePolicy
 from src.domain.value_objects.step_execution_status import StepExecutionStatus
 from src.domain.value_objects.step_type import StepType
 from tests.unit.application.fakes import (
-    FakeNotificationService,
     MemoryEnvironmentRepo,
     FakeRunnerRegistry,
     MemoryExecutionRepo,
@@ -42,10 +41,20 @@ async def _env_repo_for_pipeline(pipeline: Pipeline) -> MemoryEnvironmentRepo:
 async def test_engine_marks_failed_and_skips_remaining_on_stop_policy() -> None:
     pipeline = Pipeline.create("Deploy", str(uuid4()))
     s1 = PipelineStep.create(
-        str(pipeline.id), 1, "build", StepType.SSH_COMMAND, "make build", OnFailurePolicy.STOP
+        str(pipeline.id),
+        1,
+        "build",
+        StepType.SSH_COMMAND,
+        "make build",
+        OnFailurePolicy.STOP,
     )
     s2 = PipelineStep.create(
-        str(pipeline.id), 2, "deploy", StepType.SSH_COMMAND, "make deploy", OnFailurePolicy.STOP
+        str(pipeline.id),
+        2,
+        "deploy",
+        StepType.SSH_COMMAND,
+        "make deploy",
+        OnFailurePolicy.STOP,
     )
     p_repo = MemoryPipelineRepo(pipeline, [s1, s2])
     env_repo = await _env_repo_for_pipeline(pipeline)
@@ -82,10 +91,20 @@ async def test_engine_marks_failed_and_skips_remaining_on_stop_policy() -> None:
 async def test_engine_continue_policy_advances_to_next_step() -> None:
     pipeline = Pipeline.create("Deploy", str(uuid4()))
     s1 = PipelineStep.create(
-        str(pipeline.id), 1, "health", StepType.HTTP_HEALTHCHECK, "https://x/health", OnFailurePolicy.CONTINUE
+        str(pipeline.id),
+        1,
+        "health",
+        StepType.HTTP_HEALTHCHECK,
+        "https://x/health",
+        OnFailurePolicy.CONTINUE,
     )
     s2 = PipelineStep.create(
-        str(pipeline.id), 2, "notify", StepType.NOTIFY_WEBHOOK, "https://x/hook", OnFailurePolicy.STOP
+        str(pipeline.id),
+        2,
+        "notify",
+        StepType.NOTIFY_WEBHOOK,
+        "https://x/hook",
+        OnFailurePolicy.STOP,
     )
     p_repo = MemoryPipelineRepo(pipeline, [s1, s2])
     env_repo = await _env_repo_for_pipeline(pipeline)
@@ -93,7 +112,9 @@ async def test_engine_continue_policy_advances_to_next_step() -> None:
     se_repo = MemoryStepExecutionRepo()
 
     started = await StartExecution(p_repo, env_repo, e_repo, se_repo).execute(
-        StartExecutionInputDTO(pipeline_id=pipeline.id, triggered_by=uuid4(), branch_or_tag="main")
+        StartExecutionInputDTO(
+            pipeline_id=pipeline.id, triggered_by=uuid4(), branch_or_tag="main"
+        )
     )
 
     run_uc = RunNextStep(
@@ -108,4 +129,7 @@ async def test_engine_continue_policy_advances_to_next_step() -> None:
     # Com continue no primeiro passo, o motor deve avançar e tentar os próximos.
     step_execs = await se_repo.list_by_execution(started.id)
     assert len(step_execs) == 2
-    assert step_execs[0].status in {StepExecutionStatus.FAILED, StepExecutionStatus.SUCCESS}
+    assert step_execs[0].status in {
+        StepExecutionStatus.FAILED,
+        StepExecutionStatus.SUCCESS,
+    }

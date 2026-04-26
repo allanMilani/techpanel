@@ -29,11 +29,15 @@ class StartExecution:
             raise NotFoundAppError("Pipeline not found")
 
         environments = await self.environment_repo.list_by_pipeline(dto.pipeline_id)
-        environment = next((e for e in environments if e.id == pipeline.environment_id), None)
+        environment = next(
+            (e for e in environments if e.id == pipeline.environment_id), None
+        )
         if environment is None:
             raise NotFoundAppError("Environment not found for pipeline")
 
-        active = await self.execution_repo.get_active_execution_for_project(environment.project_id)
+        active = await self.execution_repo.get_active_execution_for_project(
+            environment.project_id
+        )
         if active is not None:
             raise ConflictAppError("Execution already running for this project")
 

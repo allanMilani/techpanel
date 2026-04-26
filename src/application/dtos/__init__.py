@@ -31,6 +31,14 @@ from src.application.dtos.server_dto import (
     UpdateServerInputDTO,
 )
 
+from src.application.dtos.github_dto import (
+    GitHubAuthCallbackInputDTO,
+    GitHubAuthCallbackOutputDTO,
+    GitHubAuthStartOutputDTO,
+    GitHubRefsDTO,
+    GitHubRepositoryDTO,
+)
+
 __all__ = [
     "LoginInputDTO",
     "LoginOutputDTO",
@@ -57,4 +65,9 @@ __all__ = [
     "UpdateServerInputDTO",
     "UpdatePipelineInputDTO",
     "UpdateStepInputDTO",
+    "GitHubAuthCallbackInputDTO",
+    "GitHubAuthCallbackOutputDTO",
+    "GitHubAuthStartOutputDTO",
+    "GitHubRefsDTO",
+    "GitHubRepositoryDTO",
 ]

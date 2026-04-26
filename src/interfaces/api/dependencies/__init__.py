@@ -55,6 +55,14 @@ from src.interfaces.api.dependencies.pipelines import (
     get_update_step_use_case,
 )
 
+from src.interfaces.api.dependencies.github import (
+    get_github_service,
+    get_handle_github_oauth_callback_use_case,
+    get_list_github_refs_use_case,
+    get_list_github_repositories_use_case,
+    get_start_github_oauth_use_case,
+)
+
 __all__ = [
     "CurrentUser",
     "get_current_user",
@@ -97,4 +105,9 @@ __all__ = [
     "get_update_step_use_case",
     "get_delete_step_use_case",
     "get_reorder_steps_use_case",
+    "get_github_service",
+    "get_start_github_oauth_use_case",
+    "get_handle_github_oauth_callback_use_case",
+    "get_list_github_repositories_use_case",
+    "get_list_github_refs_use_case",
 ]

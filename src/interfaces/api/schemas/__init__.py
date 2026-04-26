@@ -30,6 +30,13 @@ from src.interfaces.api.schemas.servers import (
     TestConnectionResponse,
 )
 
+from src.interfaces.api.schemas.github import (
+    GitHubOAuthCallbackResponse,
+    GitHubOAuthStartResponse,
+    GitHubRefsResponse,
+    GitHubRepositoryResponse,
+)
+
 __all__ = [
     "LoginRequest",
     "LoginResponse",
@@ -53,4 +60,8 @@ __all__ = [
     "StepCreateRequest",
     "StepResponse",
     "StepUpdateRequest",
+    "GitHubOAuthStartResponse",
+    "GitHubOAuthCallbackResponse",
+    "GitHubRepositoryResponse",
+    "GitHubRefsResponse",
 ]

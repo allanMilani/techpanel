@@ -8,6 +8,7 @@ from src.domain.ports.repositories import (
 from src.application import NotFoundAppError
 from src.domain.ports.services import IStepRunner
 
+
 class SshCommandRunner(IStepRunner):
     def __init__(
         self,
