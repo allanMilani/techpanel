@@ -24,6 +24,12 @@ class ServerModel(Base):
     host: Mapped[str] = mapped_column(String(255), nullable=False)
     port: Mapped[int] = mapped_column(Integer, nullable=False, default=22)
     ssh_user: Mapped[str] = mapped_column(String(255), nullable=False)
+    connection_kind: Mapped[str] = mapped_column(
+        String(32), nullable=False, default="ssh"
+    )
+    docker_container_name: Mapped[str | None] = mapped_column(
+        String(255), nullable=True
+    )
     private_key_enc: Mapped[str] = mapped_column(Text, nullable=False)
     created_by: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="RESTRICT"), nullable=False

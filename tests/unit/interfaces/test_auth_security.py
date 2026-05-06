@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from uuid import uuid4
 
@@ -73,6 +74,7 @@ def test_viewer_is_blocked_on_execution_start() -> None:
                 pipeline_id=uuid4(),
                 status="pending",
                 branch_or_tag="main",
+                created_at=datetime.now(UTC),
             )
         )
 
@@ -104,6 +106,7 @@ def test_admin_can_start_execution() -> None:
                 pipeline_id=uuid4(),
                 status="pending",
                 branch_or_tag="main",
+                created_at=datetime.now(UTC),
             )
 
     app.dependency_overrides[get_current_user] = lambda: CurrentUser(

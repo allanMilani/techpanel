@@ -1,19 +1,11 @@
-from src.application import ConflictAppError
-from src.application.dtos import RegisterUserOutputDTO
-from fastapi.testclient import TestClient
 from uuid import uuid4
 
+from fastapi.testclient import TestClient
+
 from main import app
-from src.interfaces.api.dependencies import (
-    get_list_projects,
-    get_register_user_use_case,
-    get_list_servers_use_case,
-)
-
-
-class _FastListUseCase:
-    async def execute(self) -> list[object]:
-        return []
+from src.application import ConflictAppError
+from src.application.dtos import RegisterUserOutputDTO
+from src.interfaces.api.dependencies import get_register_user_use_case
 
 
 class _RegisterOkUseCase:
@@ -31,64 +23,56 @@ class _RegisterConflictUseCase:
         raise ConflictAppError("Email already registered")
 
 
-def test_login_page_renders() -> None:
+def test_spa_shell_served_at_root_when_built() -> None:
     with TestClient(app) as client:
         response = client.get("/")
-        assert response.status_code == 200
-        assert "Login" in response.text
-        assert "Criar conta" in response.text
+    assert response.status_code == 200
+    assert 'id="app"' in response.text
 
 
-def test_register_page_renders() -> None:
+def test_spa_shell_at_app_path() -> None:
     with TestClient(app) as client:
-        response = client.get("/register")
-        assert response.status_code == 200
-        assert "Cadastro" in response.text
-        assert 'action="/register"' in response.text
+        response = client.get("/app/pipelines")
+    assert response.status_code == 200
+    assert 'id="app"' in response.text
 
 
-def test_register_submit_redirects_on_success() -> None:
+def test_register_json_returns_201() -> None:
     app.dependency_overrides[get_register_user_use_case] = lambda: _RegisterOkUseCase()
     with TestClient(app) as client:
         response = client.post(
-            "/register",
-            data={"email": "new@techpanel.dev", "password": "secret123"},
-            follow_redirects=False,
+            "/api/auth/register",
+            json={"email": "new@techpanel.dev", "password": "secret123"},
         )
-        assert response.status_code == 303
-        assert response.headers["location"] == "/"
     app.dependency_overrides.clear()
+    assert response.status_code == 201
+    data = response.json()
+    assert data["email"] == "new@techpanel.dev"
+    assert data["role"] == "viewer"
+    assert "user_id" in data
 
 
-def test_register_submit_returns_409_when_email_exists() -> None:
-    app.dependency_overrides[get_register_user_use_case] = (
-        lambda: _RegisterConflictUseCase()
+def test_register_json_returns_409_when_email_exists() -> None:
+    app.dependency_overrides[get_register_user_use_case] = lambda: (
+        _RegisterConflictUseCase()
     )
     with TestClient(app) as client:
         response = client.post(
-            "/register",
-            data={"email": "existing@techpanel.dev", "password": "secret123"},
+            "/api/auth/register",
+            json={"email": "existing@techpanel.dev", "password": "secret123"},
         )
-        assert response.status_code == 409
-        assert "E-mail ja cadastrado" in response.text
     app.dependency_overrides.clear()
+    assert response.status_code == 409
+    assert "detail" in response.json()
 
 
-def test_dashboard_has_polling_and_modals() -> None:
-    app.dependency_overrides[get_list_servers_use_case] = lambda: _FastListUseCase()
-    app.dependency_overrides[get_list_projects] = lambda: _FastListUseCase()
+def test_auth_me_without_cookie_returns_401() -> None:
     with TestClient(app) as client:
-        response = client.get("/app")
-        assert response.status_code == 200
-        assert 'hx-trigger="load, every 2s"' in response.text
-        assert "confirmExecutionModal" in response.text
-        assert "confirmExecutionProductionModal" in response.text
-        assert "CONFIRMAR" in response.text
-    app.dependency_overrides.clear()
+        response = client.get("/api/auth/me")
+    assert response.status_code == 401
 
 
-def test_history_failed_step_highlight() -> None:
-    html = """
-      <span class="text-danger fw-semibold">Passo com falha</span>
-    """
-    assert "Passo com falha" in html
+def test_logout_api_returns_204() -> None:
+    with TestClient(app) as client:
+        response = client.post("/api/auth/logout")
+    assert response.status_code == 204

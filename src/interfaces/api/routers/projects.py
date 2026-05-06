@@ -1,5 +1,6 @@
 from typing import Annotated
 from uuid import UUID
+
 from fastapi import APIRouter, Depends, status
 from src.application.dtos import (
     CreateProjectInputDTO,
@@ -30,6 +31,11 @@ from src.interfaces.api.dependencies import (
     get_update_environment,
     get_update_project,
     require_admin,
+)
+from src.interfaces.api.dependencies.pagination import Pagination, get_pagination
+from src.interfaces.api.schemas.paged_lists import (
+    EnvironmentsListPageResponse,
+    ProjectsListPageResponse,
 )
 from src.interfaces.api.schemas.environment_schemas import (
     EnvironmentCreateBody,
@@ -67,12 +73,20 @@ def _env_to_response(env) -> EnvironmentResponse:
     )
 
 
-@router.get("/", response_model=list[ProjectResponse])
+@router.get("/", response_model=ProjectsListPageResponse)
 async def list_projects(
     _: Annotated[CurrentUser, Depends(get_current_user)],
+    pagination: Annotated[Pagination, Depends(get_pagination)],
     use_case: Annotated[ListProjects, Depends(get_list_projects)],
-) -> list[ProjectResponse]:
-    return [_project_to_response(project) for project in await use_case.execute()]
+) -> ProjectsListPageResponse:
+    out = await use_case.execute(pagination.page, pagination.per_page)
+    return ProjectsListPageResponse(
+        items=[_project_to_response(p) for p in out.items],
+        total=out.total,
+        page=out.page,
+        per_page=out.per_page,
+        total_pages=out.total_pages,
+    )
 
 
 @router.post("/", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
@@ -128,15 +142,23 @@ async def delete_project(
     await use_case.execute(project_id)
 
 
-@router.get("/{project_id}/environments", response_model=list[EnvironmentResponse])
+@router.get("/{project_id}/environments", response_model=EnvironmentsListPageResponse)
 async def list_project_environments(
     project_id: UUID,
     _: Annotated[CurrentUser, Depends(get_current_user)],
+    pagination: Annotated[Pagination, Depends(get_pagination)],
     use_case: Annotated[
         ListProjectEnvironments, Depends(get_list_project_environments)
     ],
-) -> list[EnvironmentResponse]:
-    return [_env_to_response(env) for env in await use_case.execute(project_id)]
+) -> EnvironmentsListPageResponse:
+    out = await use_case.execute(project_id, pagination.page, pagination.per_page)
+    return EnvironmentsListPageResponse(
+        items=[_env_to_response(env) for env in out.items],
+        total=out.total,
+        page=out.page,
+        per_page=out.per_page,
+        total_pages=out.total_pages,
+    )
 
 
 @router.post(

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from uuid import UUID
-from sqlalchemy import select
+
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.ports.repositories import IServerRepository
@@ -21,6 +22,8 @@ class PgServerRepository(IServerRepository):
             host=server.host,
             port=server.port,
             ssh_user=server.ssh_user,
+            connection_kind=server.connection_kind.value,
+            docker_container_name=server.docker_container_name,
             private_key_enc=server.private_key_enc,
             created_by=server.created_by,
         )
@@ -41,6 +44,8 @@ class PgServerRepository(IServerRepository):
         row.host = server.host
         row.port = server.port
         row.ssh_user = server.ssh_user
+        row.connection_kind = server.connection_kind.value
+        row.docker_container_name = server.docker_container_name
         row.private_key_enc = server.private_key_enc
         row.created_by = server.created_by
 
@@ -57,6 +62,18 @@ class PgServerRepository(IServerRepository):
     async def list_all(self) -> list[Server]:
         result = await self._session.execute(select(ServerModel))
         return [server_model_to_entity(row) for row in result.scalars().all()]
+
+    async def list_all_page(self, limit: int, offset: int) -> tuple[list[Server], int]:
+        total = int(
+            await self._session.scalar(select(func.count()).select_from(ServerModel)) or 0
+        )
+        result = await self._session.execute(
+            select(ServerModel)
+            .order_by(ServerModel.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        return [server_model_to_entity(row) for row in result.scalars().all()], total
 
     async def delete(self, server_id: UUID) -> None:
         result = await self._session.execute(

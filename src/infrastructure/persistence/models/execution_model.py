@@ -34,6 +34,7 @@ class ExecutionModel(Base):
     )
     branch_or_tag: Mapped[str] = mapped_column(String(512), nullable=False)
     status: Mapped[ExecutionStatus] = mapped_column(String(32), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     started_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )

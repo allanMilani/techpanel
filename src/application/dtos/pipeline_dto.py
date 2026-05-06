@@ -16,13 +16,13 @@ class CreatePipelineInputDTO:
 @dataclass(slots=True, frozen=True)
 class AddStepInputDTO:
     pipeline_id: UUID
-    order: int
     name: str
     step_type: str
     command: str
     on_failure: str
     timeout_seconds: int = 300
     working_directory: str | None = None
+    order: int | None = None
 
 
 @dataclass(slots=True, frozen=True)

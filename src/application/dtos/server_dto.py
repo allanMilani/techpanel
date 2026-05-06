@@ -10,6 +10,8 @@ class CreateServerInputDTO:
     ssh_user: str
     private_key_plain: str
     created_by: UUID
+    connection_kind: str = "ssh"
+    docker_container_name: str | None = None
 
 
 @dataclass(slots=True, frozen=True)
@@ -20,6 +22,8 @@ class ServerOutputDTO:
     port: int
     ssh_user: str
     created_by: UUID
+    connection_kind: str
+    docker_container_name: str | None
 
 
 @dataclass(slots=True, frozen=True)
@@ -29,3 +33,5 @@ class UpdateServerInputDTO:
     port: int
     ssh_user: str
     private_key_plain: str | None = None
+    connection_kind: str = "ssh"
+    docker_container_name: str | None = None

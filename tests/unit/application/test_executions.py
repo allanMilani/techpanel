@@ -1,12 +1,14 @@
-from uuid import uuid4
+import asyncio
 from dataclasses import replace
+from uuid import uuid4
 
 import pytest
 
-from src.application import ConflictAppError, NotFoundAppError, ValidationAppError
+from src.application import ActiveExecutionConflictError, NotFoundAppError, ValidationAppError
 from src.application.dtos import RunNextStepInputDTO, StartExecutionInputDTO
 from src.application.use_cases.executions.get_execution_logs import GetExecutionLogs
 from src.application.use_cases.executions.get_history import GetHistory
+from src.application.use_cases.executions.cancel_execution import CancelExecution
 from src.application.use_cases.executions.run_next_step import RunNextStep
 from src.application.use_cases.executions.start_execution import StartExecution
 from src.domain.entities.environment import Environment
@@ -16,6 +18,7 @@ from src.domain.entities.pipeline_step import PipelineStep
 from src.domain.value_objects.environment_type import EnvironmentType
 from src.domain.value_objects.execution_status import ExecutionStatus
 from src.domain.value_objects.on_failure_policy import OnFailurePolicy
+from src.domain.value_objects.step_execution_status import StepExecutionStatus
 from src.domain.value_objects.step_type import StepType
 from tests.unit.application.fakes import (
     FakeNotificationService,
@@ -25,6 +28,7 @@ from tests.unit.application.fakes import (
     MemoryPipelineRepo,
     MemoryStepExecutionRepo,
 )
+from tests.unit.application.run_engine import run_next_step_until_terminal
 
 
 async def _build_environment_repo_for_pipeline(
@@ -71,6 +75,9 @@ async def test_start_execution_creates_step_executions() -> None:
         )
     )
     assert out.status == "pending"
+    persisted = await exec_repo.get_by_id(out.id)
+    assert persisted is not None
+    assert persisted.triggered_by_ip == "127.0.0.1"
     rows = await step_repo.list_by_execution(out.id)
     assert len(rows) == 1
     assert rows[0].pipeline_step_id == s1.id
@@ -90,7 +97,7 @@ async def test_start_execution_conflict_when_active_in_environment() -> None:
     exec_repo.set_active_for_env(env_id, active)
 
     use_case = StartExecution(pipe_repo, env_repo, exec_repo, step_repo)
-    with pytest.raises(ConflictAppError):
+    with pytest.raises(ActiveExecutionConflictError) as ctx:
         await use_case.execute(
             StartExecutionInputDTO(
                 pipeline_id=p.id,
@@ -98,6 +105,75 @@ async def test_start_execution_conflict_when_active_in_environment() -> None:
                 branch_or_tag="main",
             )
         )
+    assert ctx.value.blocking_execution_id == active.id
+
+
+@pytest.mark.asyncio
+async def test_cancel_execution_marks_cancelled_and_skips_pending_steps() -> None:
+    env_id = uuid4()
+    p = Pipeline.create("Deploy", str(env_id))
+    s1 = PipelineStep.create(
+        str(p.id),
+        1,
+        "one",
+        StepType.SSH_COMMAND,
+        "echo",
+        OnFailurePolicy.STOP,
+    )
+    pipe_repo = MemoryPipelineRepo(p, [s1])
+    exec_repo = MemoryExecutionRepo()
+    step_repo = MemoryStepExecutionRepo()
+    env_repo = await _build_environment_repo_for_pipeline(p)
+
+    started = await StartExecution(pipe_repo, env_repo, exec_repo, step_repo).execute(
+        StartExecutionInputDTO(pipeline_id=p.id, triggered_by=uuid4(), branch_or_tag="main")
+    )
+
+    await CancelExecution(exec_repo, step_repo).execute(started.id)
+
+    final = await exec_repo.get_by_id(started.id)
+    assert final is not None
+    assert final.status == ExecutionStatus.CANCELLED
+    assert final.finished_at is not None
+    steps = await step_repo.list_by_execution(started.id)
+    assert len(steps) == 1
+    assert steps[0].status == StepExecutionStatus.SKIPPED
+
+
+@pytest.mark.asyncio
+async def test_run_next_step_returns_when_execution_already_cancelled() -> None:
+    env_id = uuid4()
+    p = Pipeline.create("Deploy", str(env_id))
+    s1 = PipelineStep.create(
+        str(p.id),
+        1,
+        "one",
+        StepType.SSH_COMMAND,
+        "echo",
+        OnFailurePolicy.STOP,
+    )
+    pipe_repo = MemoryPipelineRepo(p, [s1])
+    exec_repo = MemoryExecutionRepo()
+    step_repo = MemoryStepExecutionRepo()
+    env_repo = await _build_environment_repo_for_pipeline(p)
+
+    started = await StartExecution(pipe_repo, env_repo, exec_repo, step_repo).execute(
+        StartExecutionInputDTO(pipeline_id=p.id, triggered_by=uuid4(), branch_or_tag="main")
+    )
+    ex = await exec_repo.get_by_id(started.id)
+    assert ex is not None
+    await exec_repo.update(ex.mark_cancelled())
+
+    await RunNextStep(
+        exec_repo,
+        step_repo,
+        pipe_repo,
+        FakeRunnerRegistry(0),
+    ).execute(RunNextStepInputDTO(execution_id=started.id))
+
+    final = await exec_repo.get_by_id(started.id)
+    assert final is not None
+    assert final.status == ExecutionStatus.CANCELLED
 
 
 @pytest.mark.asyncio
@@ -124,9 +200,8 @@ async def test_run_next_step_single_successful_step() -> None:
     )
 
     run = RunNextStep(exec_repo, step_repo, pipe_repo, FakeRunnerRegistry(0))
-    await run.execute(RunNextStepInputDTO(execution_id=started.id))
+    final = await run_next_step_until_terminal(exec_repo, run, started.id)
 
-    final = await exec_repo.get_by_id(started.id)
     assert final is not None
     assert final.status == ExecutionStatus.SUCCESS
     step_execs = await step_repo.list_by_execution(started.id)
@@ -254,9 +329,41 @@ async def test_get_history_maps_dtos() -> None:
     )
 
     hist = GetHistory(exec_repo)
-    out = await hist.execute(p.id)
-    assert len(out) == 1
-    assert out[0].id == started.id
+    out = await hist.execute(p.id, page=1, per_page=20)
+    assert out.total == 1
+    assert len(out.items) == 1
+    assert out.items[0].id == started.id
+    assert out.items[0].created_at == (await exec_repo.get_by_id(started.id)).created_at
+
+
+@pytest.mark.asyncio
+async def test_get_history_orders_newest_first() -> None:
+    env_id = uuid4()
+    p = Pipeline.create("Deploy", str(env_id))
+    s1 = PipelineStep.create(
+        str(p.id),
+        1,
+        "one",
+        StepType.SSH_COMMAND,
+        "echo",
+        OnFailurePolicy.STOP,
+    )
+    pipe_repo = MemoryPipelineRepo(p, [s1])
+    exec_repo = MemoryExecutionRepo()
+    step_repo = MemoryStepExecutionRepo()
+    env_repo = await _build_environment_repo_for_pipeline(p)
+
+    first = await StartExecution(pipe_repo, env_repo, exec_repo, step_repo).execute(
+        StartExecutionInputDTO(pipeline_id=p.id, triggered_by=uuid4(), branch_or_tag="main")
+    )
+    await CancelExecution(exec_repo, step_repo).execute(first.id)
+    await asyncio.sleep(0.05)
+    second = await StartExecution(pipe_repo, env_repo, exec_repo, step_repo).execute(
+        StartExecutionInputDTO(pipeline_id=p.id, triggered_by=uuid4(), branch_or_tag="develop")
+    )
+
+    out = await GetHistory(exec_repo).execute(p.id, page=1, per_page=20)
+    assert [x.id for x in out.items] == [second.id, first.id]
 
 
 @pytest.mark.asyncio

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.entities import Execution
@@ -36,6 +36,10 @@ class PgExecutionRepository(IExecutionRepository):
             triggered_by=execution.triggered_by,
             branch_or_tag=execution.branch_or_tag,
             status=execution.status.value,
+            created_at=execution.created_at,
+            triggered_by_ip=execution.triggered_by_ip,
+            started_at=execution.started_at,
+            finished_at=execution.finished_at,
         )
         self._session.add(row)
         await self._session.flush()
@@ -53,6 +57,9 @@ class PgExecutionRepository(IExecutionRepository):
         row.triggered_by = execution.triggered_by
         row.branch_or_tag = execution.branch_or_tag
         row.status = execution.status.value
+        row.triggered_by_ip = execution.triggered_by_ip
+        row.started_at = execution.started_at
+        row.finished_at = execution.finished_at
         await self._session.flush()
         return execution_model_to_entity(row)
 
@@ -65,9 +72,31 @@ class PgExecutionRepository(IExecutionRepository):
 
     async def list_by_pipeline(self, pipeline_id: UUID) -> list[Execution]:
         result = await self._session.execute(
-            select(ExecutionModel).where(ExecutionModel.pipeline_id == pipeline_id)
+            select(ExecutionModel)
+            .where(ExecutionModel.pipeline_id == pipeline_id)
+            .order_by(ExecutionModel.created_at.desc())
         )
         return [execution_model_to_entity(row) for row in result.scalars().all()]
+
+    async def list_by_pipeline_page(
+        self, pipeline_id: UUID, limit: int, offset: int
+    ) -> tuple[list[Execution], int]:
+        total = int(
+            await self._session.scalar(
+                select(func.count())
+                .select_from(ExecutionModel)
+                .where(ExecutionModel.pipeline_id == pipeline_id)
+            )
+            or 0
+        )
+        result = await self._session.execute(
+            select(ExecutionModel)
+            .where(ExecutionModel.pipeline_id == pipeline_id)
+            .order_by(ExecutionModel.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        return [execution_model_to_entity(row) for row in result.scalars().all()], total
 
     async def get_active_execution_for_environment(
         self, environment_id: UUID

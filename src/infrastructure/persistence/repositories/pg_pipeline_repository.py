@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.entities import Pipeline, PipelineStep
@@ -95,6 +95,27 @@ class PgPipelineRepository(IPipelineRepository):
             )
         return pipelines
 
+    async def list_by_environment_page(
+        self, environment_id: UUID, limit: int, offset: int
+    ) -> tuple[list[Pipeline], int]:
+        total = int(
+            await self._session.scalar(
+                select(func.count())
+                .select_from(PipelineModel)
+                .where(PipelineModel.environment_id == environment_id)
+            )
+            or 0
+        )
+        result = await self._session.execute(
+            select(PipelineModel)
+            .where(PipelineModel.environment_id == environment_id)
+            .order_by(PipelineModel.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        rows = result.scalars().all()
+        return [pipeline_model_to_entity(row, []) for row in rows], total
+
     async def delete(self, pipeline_id: UUID) -> None:
         result = await self._session.execute(
             select(PipelineModel).where(PipelineModel.id == pipeline_id)
@@ -144,6 +165,26 @@ class PgPipelineRepository(IPipelineRepository):
             .order_by(PipelineStepModel.order.asc())
         )
         return [pipeline_step_model_to_entity(r) for r in result.scalars().all()]
+
+    async def list_steps_page(
+        self, pipeline_id: UUID, limit: int, offset: int
+    ) -> tuple[list[PipelineStep], int]:
+        total = int(
+            await self._session.scalar(
+                select(func.count())
+                .select_from(PipelineStepModel)
+                .where(PipelineStepModel.pipeline_id == pipeline_id)
+            )
+            or 0
+        )
+        result = await self._session.execute(
+            select(PipelineStepModel)
+            .where(PipelineStepModel.pipeline_id == pipeline_id)
+            .order_by(PipelineStepModel.order.asc())
+            .limit(limit)
+            .offset(offset)
+        )
+        return [pipeline_step_model_to_entity(r) for r in result.scalars().all()], total
 
     async def get_next_step(
         self, pipeline_id: UUID, after_order: int

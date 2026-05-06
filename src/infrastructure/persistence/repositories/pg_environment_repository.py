@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from uuid import UUID
-from sqlalchemy import select
+
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.ports.repositories import IEnvironmentRepository
@@ -60,6 +61,26 @@ class PgEnvironmentRepository(IEnvironmentRepository):
             .order_by(EnvironmentModel.name.asc())
         )
         return [environment_model_to_entity(row) for row in result.scalars().all()]
+
+    async def list_by_project_page(
+        self, project_id: UUID, limit: int, offset: int
+    ) -> tuple[list[Environment], int]:
+        total = int(
+            await self._session.scalar(
+                select(func.count())
+                .select_from(EnvironmentModel)
+                .where(EnvironmentModel.project_id == project_id)
+            )
+            or 0
+        )
+        result = await self._session.execute(
+            select(EnvironmentModel)
+            .where(EnvironmentModel.project_id == project_id)
+            .order_by(EnvironmentModel.name.asc())
+            .limit(limit)
+            .offset(offset)
+        )
+        return [environment_model_to_entity(row) for row in result.scalars().all()], total
 
     async def list_by_pipeline(self, pipeline_id: UUID) -> list[Environment]:
         pipeline_project_result = await self._session.execute(

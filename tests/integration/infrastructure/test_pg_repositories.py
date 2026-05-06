@@ -9,7 +9,6 @@ from src.application.dtos import (
     CreateServerInputDTO,
     LinkEnvironmentInputDTO,
     LoginInputDTO,
-    RunNextStepInputDTO,
     StartExecutionInputDTO,
 )
 from src.application.use_cases.auth.login import Login
@@ -17,6 +16,7 @@ from src.application.use_cases.executions.get_execution_logs import GetExecution
 from src.application.use_cases.executions.get_history import GetHistory
 from src.application.use_cases.executions.run_next_step import RunNextStep
 from src.application.use_cases.executions.start_execution import StartExecution
+from tests.unit.application.run_engine import run_next_step_until_terminal
 from src.application.use_cases.pipelines.add_step import AddStep
 from src.application.use_cases.pipelines.create_pipeline import CreatePipeline
 from src.application.use_cases.projects.create_project import CreateProject
@@ -120,21 +120,21 @@ async def test_integration_deploy_flow_with_fakes() -> None:
     await AddStep(pipeline_repo).execute(
         AddStepInputDTO(
             pipeline_id=pipeline_out.id,
-            order=1,
             name="pull",
             step_type="ssh_command",
             command="git pull",
             on_failure=OnFailurePolicy.STOP.value,
+            order=1,
         )
     )
     await AddStep(pipeline_repo).execute(
         AddStepInputDTO(
             pipeline_id=pipeline_out.id,
-            order=2,
             name="health",
             step_type="http_healthcheck",
             command="https://example.com/health",
             on_failure=OnFailurePolicy.CONTINUE.value,
+            order=2,
         )
     )
 
@@ -151,22 +151,24 @@ async def test_integration_deploy_flow_with_fakes() -> None:
         )
     )
 
-    await RunNextStep(
+    run_uc = RunNextStep(
         execution_repo=execution_repo,
         step_execution_repo=step_execution_repo,
         pipeline_repo=pipeline_repo,
         runner_registry=FakeRunnerRegistry(exit_code=0),
-    ).execute(RunNextStepInputDTO(execution_id=started.id))
+    )
+    await run_next_step_until_terminal(execution_repo, run_uc, started.id)
 
     logs = await GetExecutionLogs(execution_repo, step_execution_repo).execute(
         started.id
     )
-    history = await GetHistory(execution_repo).execute(pipeline_out.id)
+    history = await GetHistory(execution_repo).execute(pipeline_out.id, page=1, per_page=20)
     final_execution = await execution_repo.get_by_id(started.id)
 
     assert len(logs) == 2
     assert {log.status for log in logs} == {StepExecutionStatus.SUCCESS.value}
-    assert len(history) == 1
+    assert history.total == 1
+    assert len(history.items) == 1
     assert final_execution is not None
     assert final_execution.status == ExecutionStatus.SUCCESS
 
@@ -202,11 +204,11 @@ async def test_integration_notify_and_stop_with_fakes() -> None:
     await AddStep(pipeline_repo).execute(
         AddStepInputDTO(
             pipeline_id=pipeline.id,
-            order=1,
             name="failing-step",
             step_type="ssh_command",
             command="exit 1",
             on_failure=OnFailurePolicy.NOTIFY_AND_STOP.value,
+            order=1,
         )
     )
     started = await StartExecution(
@@ -221,13 +223,14 @@ async def test_integration_notify_and_stop_with_fakes() -> None:
             branch_or_tag="main",
         )
     )
-    await RunNextStep(
+    run_uc = RunNextStep(
         execution_repo=execution_repo,
         step_execution_repo=step_execution_repo,
         pipeline_repo=pipeline_repo,
         runner_registry=FakeRunnerRegistry(exit_code=1),
         notification_service=notification_service,
-    ).execute(RunNextStepInputDTO(execution_id=started.id))
+    )
+    await run_next_step_until_terminal(execution_repo, run_uc, started.id)
 
     final_execution = await execution_repo.get_by_id(started.id)
     assert final_execution is not None

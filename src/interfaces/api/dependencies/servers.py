@@ -8,9 +8,10 @@ from src.application.use_cases.servers.delete_server import DeleteServer
 from src.application.use_cases.servers.list_servers import ListServers
 from src.application.use_cases.servers.update_server import UpdateServer
 from src.domain.ports.repositories import IServerRepository
-from src.domain.ports.services import IKeyCipher, ISSHService
+from src.domain.ports.services import IDockerExecService, IKeyCipher, ISSHService
 from src.infrastructure.config.settings import get_settings
 from src.infrastructure.security.fernet_key_cipher import FernetKeyCipher
+from src.infrastructure.services.docker_cli_exec_service import DockerCliExecService
 from src.infrastructure.services.paramiko_ssh_service import ParamikoSSHService
 from src.interfaces.api.dependencies.core import get_server_repository
 
@@ -22,6 +23,10 @@ def get_key_cipher() -> IKeyCipher:
 
 def get_ssh_service() -> ISSHService:
     return ParamikoSSHService()
+
+
+def get_docker_exec_service() -> IDockerExecService:
+    return DockerCliExecService()
 
 
 def get_create_server_use_case(
@@ -54,9 +59,11 @@ def get_check_ssh_connection_use_case(
     server_repo: Annotated[IServerRepository, Depends(get_server_repository)],
     ssh_service: Annotated[ISSHService, Depends(get_ssh_service)],
     key_cipher: Annotated[IKeyCipher, Depends(get_key_cipher)],
+    docker_exec: Annotated[IDockerExecService, Depends(get_docker_exec_service)],
 ) -> CheckSSHConnection:
     return CheckSSHConnection(
         server_repo=server_repo,
         ssh_service=ssh_service,
         key_cipher=key_cipher,
+        docker_exec=docker_exec,
     )

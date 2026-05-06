@@ -24,6 +24,7 @@ class ExecutionStatus(str, enum.Enum):
     SUCCESS = "success"
     FAILED = "failed"
     BLOCKED = "blocked"
+    CANCELLED = "cancelled"
 
 
 class StepExecutionStatus(str, enum.Enum):

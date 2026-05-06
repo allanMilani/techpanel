@@ -1,4 +1,5 @@
 from dataclasses import dataclass, replace
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from src.domain.errors import ValidationError
@@ -12,9 +13,18 @@ class Execution:
     triggered_by: UUID
     branch_or_tag: str
     status: ExecutionStatus
+    created_at: datetime
+    triggered_by_ip: str | None = None
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
 
     @staticmethod
-    def create(pipeline_id: str, triggered_by: str, branch_or_tag: str) -> "Execution":
+    def create(
+        pipeline_id: str,
+        triggered_by: str,
+        branch_or_tag: str,
+        triggered_by_ip: str | None = None,
+    ) -> "Execution":
         if not pipeline_id:
             raise ValidationError("Pipeline ID is required")
 
@@ -24,19 +34,58 @@ class Execution:
         if not branch_or_tag.strip():
             raise ValidationError("Branch or tag is required")
 
+        ip: str | None = None
+        if triggered_by_ip is not None and triggered_by_ip.strip():
+            ip = triggered_by_ip.strip()[:64]
+
         return Execution(
             id=uuid4(),
             pipeline_id=UUID(pipeline_id),
             triggered_by=UUID(triggered_by),
             branch_or_tag=branch_or_tag.strip(),
             status=ExecutionStatus.PENDING,
+            created_at=datetime.now(UTC),
+            triggered_by_ip=ip,
         )
 
     def mark_running(self) -> "Execution":
-        return replace(self, status=ExecutionStatus.RUNNING)
+        now = datetime.now(UTC)
+        return replace(
+            self,
+            status=ExecutionStatus.RUNNING,
+            started_at=self.started_at or now,
+        )
 
     def mark_success(self) -> "Execution":
-        return replace(self, status=ExecutionStatus.SUCCESS)
+        now = datetime.now(UTC)
+        return replace(
+            self,
+            status=ExecutionStatus.SUCCESS,
+            started_at=self.started_at or now,
+            finished_at=self.finished_at or now,
+        )
 
     def mark_failed(self) -> "Execution":
-        return replace(self, status=ExecutionStatus.FAILED)
+        now = datetime.now(UTC)
+        return replace(
+            self,
+            status=ExecutionStatus.FAILED,
+            started_at=self.started_at or now,
+            finished_at=self.finished_at or now,
+        )
+
+    def mark_cancelled(self) -> "Execution":
+        now = datetime.now(UTC)
+        return replace(
+            self,
+            status=ExecutionStatus.CANCELLED,
+            finished_at=self.finished_at or now,
+        )
+
+    def mark_blocked(self) -> "Execution":
+        now = datetime.now(UTC)
+        return replace(
+            self,
+            status=ExecutionStatus.BLOCKED,
+            finished_at=self.finished_at or now,
+        )

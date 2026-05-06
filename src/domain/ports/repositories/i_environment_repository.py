@@ -18,6 +18,11 @@ class IEnvironmentRepository(ABC):
     async def list_by_project(self, project_id: UUID) -> list[Environment]: ...
 
     @abstractmethod
+    async def list_by_project_page(
+        self, project_id: UUID, limit: int, offset: int
+    ) -> tuple[list[Environment], int]: ...
+
+    @abstractmethod
     async def list_by_pipeline(self, pipeline_id: UUID) -> list[Environment]: ...
 
     @abstractmethod

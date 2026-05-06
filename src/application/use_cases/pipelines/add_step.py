@@ -12,13 +12,18 @@ class AddStep:
         self.pipeline_repo = pipeline_repo
 
     async def execute(self, dto: AddStepInputDTO) -> PipelineOutputDTO:
-        pipeline = await self.pipeline_repo.get_by_id(dto.pipeline_id)
-        if pipeline is None:
+        if await self.pipeline_repo.get_by_id(dto.pipeline_id) is None:
             raise NotFoundAppError("Pipeline not found")
+
+        if dto.order is not None:
+            order = dto.order
+        else:
+            existing = await self.pipeline_repo.list_steps(dto.pipeline_id)
+            order = max((s.order for s in existing), default=0) + 1
 
         step = PipelineStep.create(
             pipeline_id=str(dto.pipeline_id),
-            order=dto.order,
+            order=order,
             name=dto.name,
             step_type=StepType(dto.step_type),
             command=dto.command,

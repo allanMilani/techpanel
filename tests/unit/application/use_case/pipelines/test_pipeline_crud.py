@@ -27,9 +27,10 @@ async def test_pipeline_crud_flow() -> None:
     )
 
     list_uc = ListPipelines(repo)
-    listed = await list_uc.execute(created.environment_id)
-    assert len(listed) == 1
-    assert listed[0].id == created.id
+    listed = await list_uc.execute(created.environment_id, page=1, per_page=20)
+    assert listed.total == 1
+    assert len(listed.items) == 1
+    assert listed.items[0].id == created.id
 
     update_uc = UpdatePipeline(repo)
     updated = await update_uc.execute(
@@ -51,4 +52,4 @@ async def test_get_pipeline_not_found() -> None:
     use_case = GetPipeline(repo)
 
     with pytest.raises(NotFoundAppError):
-        await use_case.execute(uuid4())
+        await use_case.execute(uuid4(), page=1, per_page=20)

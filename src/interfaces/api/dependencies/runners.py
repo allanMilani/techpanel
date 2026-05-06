@@ -7,7 +7,11 @@ from src.domain.ports.repositories import (
     IPipelineRepository,
     IServerRepository,
 )
-from src.domain.ports.services import INotificationService, IRunnerRegistry
+from src.domain.ports.services import (
+    IDockerExecService,
+    INotificationService,
+    IRunnerRegistry,
+)
 from src.domain.ports.services.i_key_cipher import IKeyCipher
 from src.domain.ports.services.i_ssh_service import ISSHService
 from src.domain.value_objects.step_type import StepType
@@ -20,7 +24,11 @@ from src.interfaces.api.dependencies.core import (
     get_pipeline_repository,
     get_server_repository,
 )
-from src.interfaces.api.dependencies.servers import get_key_cipher, get_ssh_service
+from src.interfaces.api.dependencies.servers import (
+    get_docker_exec_service,
+    get_key_cipher,
+    get_ssh_service,
+)
 
 
 class NoopNotificationService(INotificationService):
@@ -41,6 +49,7 @@ def get_ssh_command_runner(
     server_repo: Annotated[IServerRepository, Depends(get_server_repository)],
     key_cipher: Annotated[IKeyCipher, Depends(get_key_cipher)],
     ssh_service: Annotated[ISSHService, Depends(get_ssh_service)],
+    docker_exec: Annotated[IDockerExecService, Depends(get_docker_exec_service)],
 ) -> SshCommandRunner:
     return SshCommandRunner(
         environment_repo=environment_repo,
@@ -48,6 +57,7 @@ def get_ssh_command_runner(
         server_repo=server_repo,
         key_cipher=key_cipher,
         ssh_service=ssh_service,
+        docker_exec=docker_exec,
     )
 
 

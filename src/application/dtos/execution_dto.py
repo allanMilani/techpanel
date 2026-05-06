@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 from uuid import UUID
 
 from src.domain.entities.execution import Execution
@@ -19,6 +20,7 @@ class ExecutionOutputDTO:
     pipeline_id: UUID
     status: str
     branch_or_tag: str
+    created_at: datetime
 
 
 @dataclass(slots=True, frozen=True)
@@ -43,6 +45,7 @@ def execution_to_output_dto(execution: Execution) -> ExecutionOutputDTO:
         pipeline_id=execution.pipeline_id,
         status=execution.status.value,
         branch_or_tag=execution.branch_or_tag,
+        created_at=execution.created_at,
     )
 
 

@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel
 
 
@@ -6,7 +8,9 @@ class ServerCreateRequest(BaseModel):
     host: str
     port: int
     ssh_user: str
-    private_key_plain: str
+    private_key_plain: str = ""
+    connection_kind: Literal["ssh", "local_docker"] = "ssh"
+    docker_container_name: str | None = None
 
 
 class ServerUpdateRequest(BaseModel):
@@ -15,6 +19,8 @@ class ServerUpdateRequest(BaseModel):
     port: int
     ssh_user: str
     private_key_plain: str | None = None
+    connection_kind: Literal["ssh", "local_docker"] = "ssh"
+    docker_container_name: str | None = None
 
 
 class ServerResponse(BaseModel):
@@ -24,6 +30,8 @@ class ServerResponse(BaseModel):
     port: int
     ssh_user: str
     created_by: str
+    connection_kind: str
+    docker_container_name: str | None = None
 
 
 class TestConnectionResponse(BaseModel):

@@ -45,11 +45,11 @@ async def test_add_step_returns_output_dto() -> None:
     out = await use_case.execute(
         AddStepInputDTO(
             pipeline_id=p.id,
-            order=1,
             name="pull",
             step_type=StepType.SSH_COMMAND.value,
             command="git pull",
             on_failure=OnFailurePolicy.STOP.value,
+            order=1,
         )
     )
     assert out.order == 1
@@ -64,11 +64,11 @@ async def test_add_step_pipeline_not_found() -> None:
         await use_case.execute(
             AddStepInputDTO(
                 pipeline_id=uuid4(),
-                order=1,
                 name="x",
                 step_type=StepType.SSH_COMMAND.value,
                 command="c",
                 on_failure=OnFailurePolicy.STOP.value,
+                order=1,
             )
         )
 
@@ -118,3 +118,45 @@ async def test_reorder_steps_invalid_id_set() -> None:
         await use_case.execute(
             ReorderStepsInputDTO(pipeline_id=p.id, ordered_step_ids=[s1.id, uuid4()])
         )
+
+
+@pytest.mark.asyncio
+async def test_add_step_auto_order_first_step() -> None:
+    p = Pipeline.create("p", str(uuid4()))
+    repo = MemoryPipelineRepo(p, [])
+    use_case = AddStep(repo)
+    out = await use_case.execute(
+        AddStepInputDTO(
+            pipeline_id=p.id,
+            name="first",
+            step_type=StepType.SSH_COMMAND.value,
+            command="echo 1",
+            on_failure=OnFailurePolicy.STOP.value,
+        )
+    )
+    assert out.order == 1
+
+
+@pytest.mark.asyncio
+async def test_add_step_auto_order_appends_after_existing() -> None:
+    p = Pipeline.create("p", str(uuid4()))
+    s1 = PipelineStep.create(
+        str(p.id),
+        1,
+        "a",
+        StepType.SSH_COMMAND,
+        "echo",
+        OnFailurePolicy.STOP,
+    )
+    repo = MemoryPipelineRepo(p, [s1])
+    use_case = AddStep(repo)
+    out = await use_case.execute(
+        AddStepInputDTO(
+            pipeline_id=p.id,
+            name="second",
+            step_type=StepType.SSH_COMMAND.value,
+            command="echo 2",
+            on_failure=OnFailurePolicy.STOP.value,
+        )
+    )
+    assert out.order == 2

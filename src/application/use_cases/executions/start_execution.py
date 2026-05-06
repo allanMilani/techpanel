@@ -1,4 +1,4 @@
-from src.application import ConflictAppError, NotFoundAppError
+from src.application import ActiveExecutionConflictError, NotFoundAppError
 from src.application.dtos import ExecutionOutputDTO, StartExecutionInputDTO
 from src.application.dtos.execution_dto import execution_to_output_dto
 from src.domain.entities import Execution, StepExecution
@@ -39,12 +39,13 @@ class StartExecution:
             environment.project_id
         )
         if active is not None:
-            raise ConflictAppError("Execution already running for this project")
+            raise ActiveExecutionConflictError(active.id)
 
         execution = Execution.create(
             pipeline_id=str(dto.pipeline_id),
             triggered_by=str(dto.triggered_by),
             branch_or_tag=dto.branch_or_tag,
+            triggered_by_ip=dto.triggered_by_ip,
         )
 
         created = await self.execution_repo.create(execution)

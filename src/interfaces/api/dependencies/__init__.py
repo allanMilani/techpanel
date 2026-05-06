@@ -2,6 +2,7 @@ from src.interfaces.api.dependencies.auth import (
     CurrentUser,
     get_current_user,
     get_login_use_case,
+    get_optional_current_user,
     get_password_hasher,
     get_register_user_use_case,
     get_token_service,
@@ -17,6 +18,9 @@ from src.interfaces.api.dependencies.core import (
     get_user_repository,
 )
 from src.interfaces.api.dependencies.executions import (
+    get_cancel_execution_use_case,
+    get_get_execution_logs_use_case,
+    get_get_history_use_case,
     get_run_next_step_use_case,
     get_start_execution_use_case,
 )
@@ -67,6 +71,7 @@ from src.interfaces.api.dependencies.github import (
 __all__ = [
     "CurrentUser",
     "get_current_user",
+    "get_optional_current_user",
     "require_admin",
     "get_password_hasher",
     "get_token_service",
@@ -80,6 +85,9 @@ __all__ = [
     "get_execution_repository",
     "get_step_execution_repository",
     "get_start_execution_use_case",
+    "get_cancel_execution_use_case",
+    "get_get_history_use_case",
+    "get_get_execution_logs_use_case",
     "get_run_next_step_use_case",
     "get_runner_registry",
     "get_notification_service",

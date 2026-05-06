@@ -85,7 +85,8 @@ def test_github_api_routes_happy_path() -> None:
             headers={"Authorization": "Bearer any", "X-GitHub-Token": "gho_xxx"},
         )
         assert r3.status_code == 200
-        assert r3.json()[0]["full_name"] == "org/repo-a"
+        body = r3.json()
+        assert body["items"][0]["full_name"] == "org/repo-a"
 
         r4 = client.get(
             "/api/github/repos/org%2Frepo-a/refs",

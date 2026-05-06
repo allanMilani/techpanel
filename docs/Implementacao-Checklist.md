@@ -179,17 +179,17 @@ Documento operacional para acompanhar o desenvolvimento do projeto **TechPanel**
 
 ---
 
-## Etapa 12 — Interface web (HTMX + Jinja2 + Bootstrap)
+## Etapa 12 — Interface web (Vue 3 + Vite + Tailwind)
 
 **Objetivo:** interface web do TechPanel usável (seção 16 de [TechPanel.md](./TechPanel.md)).
 
-- [x] `base.html`, layout, flash/alertas  
-- [x] Login  
-- [x] Telas: servidores, projetos/ambientes, pipelines, painel de execução  
-- [x] Modal de confirmação padrão  
-- [x] Modal reforçado para `production` (digitar `CONFIRMAR`)  
-- [x] Polling ~2s no painel até execução terminal  
-- [x] Histórico com indicação do passo que falhou  
+- [x] SPA em `frontend/` (Vue Router, `components/inputs/`, Font Awesome, Tailwind); build → `src/interfaces/web/static/dist/`  
+- [x] Login/registo (`/login`, `/register`), sessão via `POST /api/auth/session` + cookie; `GET /api/auth/me` para guards; `POST /api/auth/logout`  
+- [x] Layout com navegação e logout  
+- [x] Fluxos: CRUD servidores (incl. teste SSH), projetos, ambientes, pipelines e passos (reordenação por UUIDs), execução e monitor (`GetExecutionLogs` + polling ~2s no cliente)  
+- [x] Modal de confirmação na execução (`/app/pipelines/.../run`)  
+- [x] Modal reforçado para `production` (checkbox de reconhecimento)  
+- [x] Histórico por pipeline (`GET /api/pipelines/{id}/history`) na UI  
 
 **Critério de pronto:** fluxo feliz e fluxo de falha visíveis sem usar apenas API bruta.
 
@@ -197,12 +197,77 @@ Documento operacional para acompanhar o desenvolvimento do projeto **TechPanel**
 
 ## Etapa 13 — Encerramento MVP vs backlog
 
-**Objetivo:** alinhar com critérios de aceite (seção 17) e decisões pendentes (seção 19).
+**Objetivo:** alinhar implementação, [TechPanel.md](./TechPanel.md) (seções 17 e 19) e expectativa de produto; transformar lacunas em passos executáveis.
 
-- [ ] Revisar checklist da seção 17 de [TechPanel.md](./TechPanel.md) (todos os itens)  
-- [ ] Decisões pendentes registradas: notificações, permissões granulares, rollback assistido, `manual_approval`, agendamento cron  
+**Legenda da revisão (seção 17):** `[x]` atende ao critério de forma utilizável; `[~]` parcial (API ou esqueleto de UI sem fluxo ponta a ponta); `[ ]` não atende ou diverge do documento.
 
-**Critério de pronto:** lista de aceite do produto marcada; gaps viram issues priorizadas.
+### 13.1 — Revisão dos critérios de aceite ([TechPanel.md §17](./TechPanel.md#17-critérios-de-aceite))
+
+| Critério (resumo) | Status | Observação |
+|---|---|---|
+| Tela de login com JWT | [x] | Login web (`/`, `/login`) + cookie; API `POST /api/auth/login`. |
+| Cadastro de servidores + teste SSH | [x] | **API** + **UI** (`/app/servers`, formulários, `POST .../test`). |
+| Fluxo OAuth GitHub | [~] | Endpoints `/api/auth/github` e callback existem; token retornado em JSON — **persistência por usuário** (doc §9) e uso contínuo sem reautenticar **não** espelhados na UI. |
+| Cadastro de projetos (tech stack livre) | [x] | **API** + **UI** (`/app/projects`). |
+| Múltiplos ambientes por projeto | [x] | **API** (projetos + ambientes). |
+| Cadastro/edição de pipelines e passos | [x] | **API** + **UI** (`/app/pipelines/...`, reordenação via textarea de UUIDs; sem drag-and-drop). |
+| Passos: adicionar, remover, reordenar | [x] | Via **API**. |
+| Campos por passo (nome, tipo, comando, dir, timeout, `on_failure`) | [x] | Domínio + **API**. |
+| Seletor: projeto → ambiente → pipeline → branch/tag | [~] | Navegação por páginas encadeadas; branch/tag manual na execução; **refs GitHub** ainda não na UI. |
+| Modal antes de executar | [x] | Tela `/app/pipelines/{id}/run` + `StartExecution` após confirmação. |
+| Modal reforçado `CONFIRMAR` em `production` | [x] | Condicionado a `environment_type == production`. |
+| Bloqueio 409 com execução ativa no projeto | [x] | `StartExecution` + repositório. |
+| Avanço sequencial só após sucesso do passo anterior | [x] | `RunNextStep` + runners. |
+| Passos restantes `skipped` ao interromper por falha | [x] | Conforme política `on_failure`. |
+| Status em “tempo real” durante execução | [x] | Painel via `GET /api/executions/{id}/panel` + polling ~2s no Vue. |
+| Log por passo visível | [~] | **UI** usa `GetExecutionLogs`; rotas REST extras do doc §12 (logs consolidados, etc.) ainda não no `api_router`. |
+| Histórico indica passo que falhou | [~] | `GetHistory` na UI; coluna de falha ainda genérica (sem nome do passo que falhou na execução). |
+| PostgreSQL dev e prod | [x] | Stack e migrações alinhadas ao doc. |
+| `viewer` consulta sem executar | [x] | `require_admin` em disparo de execução e testes de API. |
+
+**Itens do produto fora do §17 original (implementados no repositório):**
+
+- [x] Cadastro de usuário via web (`/register`) com validação de e-mail já cadastrado (papéis novos como `viewer` por padrão — alinhar com política de admin se necessário).
+
+### 13.2 — Passos para concluir o MVP conforme [TechPanel.md](./TechPanel.md)
+
+Estes itens fecham a lacuna entre “API pronta” e “critérios de aceite §17 utilizáveis na interface” + alinhamento de contratos HTTP.
+
+**Interface web (painel §16)**
+
+- [ ] Seletor **Projeto → Ambiente → Pipeline → Branch/Tag** no dashboard + refs GitHub (`/api/github/...`) após OAuth/token.  
+- [x] Modais de confirmação acoplados ao disparo (`/app/pipelines/.../run`; produção com `CONFIRMAR`).  
+- [x] Painel de execução com `GetExecutionLogs` (JSON) e polling no cliente ~2s.  
+- [~] Histórico: `GetHistory` na UI; coluna “falha” ainda genérica (nome/ordem do passo que falhou em backlog).  
+- [x] Telas CRUD web: servidores (incl. teste SSH), projetos, ambientes, pipelines e passos (reordenação por lista de UUIDs).  
+- [ ] `POST /api/auth/logout` com invalidação server-side (hoje só remove o cookie `access_token`).
+
+**API REST (alinhamento [TechPanel.md §12](./TechPanel.md#12-endpoints-da-api))**
+
+- [ ] Expor rotas de execução/consulta conforme doc: detalhe de execução, logs consolidado, log por passo, histórico (e/ou `active-execution` por projeto), ou atualizar o **TechPanel.md** para refletir os paths reais (`/api/executions/start`, etc.).  
+- [ ] `POST /api/auth/logout` (e comportamento de cookie/sessão na web, se aplicável).  
+- [ ] Opcional MVP: endpoint SSE `/api/executions/{id}/stream` (doc §15-B) se o polling for insuficiente para logs longos.
+
+**GitHub e segurança de cadastro**
+
+- [ ] Definir e implementar **armazenamento do token GitHub** por usuário (ou fluxo alternativo documentado) para listar repos/refs sem exigir callback a cada uso.  
+- [ ] Revisar política de **cadastro público de usuários** (`/register`) vs doc §11 (“apenas admin cria/edita…”) — restringir rota a admin, desativar self-signup ou atualizar o documento.
+
+**Decisões pendentes ([TechPanel.md §19](./TechPanel.md#19-decisões-pendentes)) — registrar como issues/backlog**
+
+- [ ] Canal de notificações de falha (UI apenas / e-mail / webhook já previsto).  
+- [ ] Permissões: manter papéis globais ou granularidade por projeto.  
+- [ ] Rollback assistido (passo opcional no pipeline vs feature dedicada).  
+- [ ] Tipo de passo `manual_approval`.  
+- [ ] Agendamento (`cron`) para `StartExecution`.
+
+### 13.3 — Encerramento da etapa 13 (checklist operacional)
+
+- [ ] Todos os itens da tabela **13.1** estão `[x]` **ou** explicitamente aceitos como fora de escopo com ajuste no [TechPanel.md](./TechPanel.md).  
+- [ ] Itens da subseção **13.2** priorizados (MVP vs pós-MVP) e rastreados (issues).  
+- [ ] Decisões **§19** (bloco em **13.2**) convertidas em issues com prioridade.
+
+**Critério de pronto (etapa 13):** revisão **13.1** concluída; itens de **13.2** e follow-up de **§19** definidos e rastreados; documentação e código sem contradição não explicada.
 
 ---
 

@@ -1,6 +1,11 @@
 from functools import lru_cache
-from pydantic import Field, PostgresDsn, computed_field
+
+from cryptography.fernet import Fernet
+from pydantic import Field, PostgresDsn, computed_field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Chave Fernet válida só para desenvolvimento (troque em produção).
+_DEFAULT_DEV_FERNET_KEY = "n6o_Ef9ZJq2f4hW-cWcLG3I8g4QxW2M_8SY2VvDdzfE="
 
 
 class Settings(BaseSettings):
@@ -24,7 +29,7 @@ class Settings(BaseSettings):
         default=30, alias="JWT_ACCESS_TOKEN_EXPIRE_MINUTES"
     )
 
-    fernet_key: str = Field(default="secret", alias="FERNET_KEY")
+    fernet_key: str = Field(default=_DEFAULT_DEV_FERNET_KEY, alias="FERNET_KEY")
 
     github_client_id: str | None = Field(default=None, alias="GITHUB_CLIENT_ID")
     github_client_secret: str | None = Field(default=None, alias="GITHUB_CLIENT_SECRET")
@@ -32,6 +37,26 @@ class Settings(BaseSettings):
         default=None, alias="GITHUB_OAUTH_CALLBACK_URL"
     )
     github_oauth_scope: str = Field(default="repo,read:org", alias="GITHUB_OAUTH_SCOPE")
+    frontend_dev_server_url: str | None = Field(
+        default="http://localhost:5173",
+        alias="FRONTEND_DEV_SERVER_URL",
+    )
+
+    @field_validator("fernet_key")
+    @classmethod
+    def validate_fernet_key(cls, value: str) -> str:
+        key = (value or "").strip()
+        if not key:
+            key = _DEFAULT_DEV_FERNET_KEY
+        try:
+            Fernet(key.encode("utf-8"))
+        except ValueError as e:
+            raise ValueError(
+                "FERNET_KEY inválida: Fernet exige 32 bytes em base64 URL-safe. "
+                'Gere com: python -c "from cryptography.fernet import Fernet; '
+                'print(Fernet.generate_key().decode())"'
+            ) from e
+        return key
 
     @computed_field
     @property

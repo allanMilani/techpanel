@@ -1,3 +1,4 @@
+from dataclasses import replace
 from uuid import UUID
 
 from src.domain.entities.environment import Environment
@@ -35,6 +36,29 @@ class FakeKeyCipher:
 
     def decrypt(self, enc: str) -> str:
         return self._store.get(enc, enc.replace("enc:", ""))
+
+
+class FakeDockerExecService:
+    def __init__(
+        self, test_ok: bool = True, exec_result: tuple[int, str] = (0, "ok")
+    ) -> None:
+        self.test_ok = test_ok
+        self.exec_result = exec_result
+
+    async def test_container(self, container: str) -> bool:
+        _ = container
+        return self.test_ok
+
+    async def execute(
+        self,
+        container: str,
+        username: str | None,
+        command: str,
+        cwd: str | None,
+        timeout_seconds: int,
+    ) -> tuple[int, str]:
+        _ = container, username, command, cwd, timeout_seconds
+        return self.exec_result
 
 
 class FakeSSHService:
@@ -104,7 +128,15 @@ class MemoryExecutionRepo:
         return self.items.get(execution_id)
 
     async def list_by_pipeline(self, pipeline_id: UUID) -> list[Execution]:
-        return [e for e in self.items.values() if e.pipeline_id == pipeline_id]
+        items = [e for e in self.items.values() if e.pipeline_id == pipeline_id]
+        return sorted(items, key=lambda e: e.created_at, reverse=True)
+
+    async def list_by_pipeline_page(
+        self, pipeline_id: UUID, limit: int, offset: int
+    ) -> tuple[list[Execution], int]:
+        rows = await self.list_by_pipeline(pipeline_id)
+        total = len(rows)
+        return rows[offset : offset + limit], total
 
     async def get_active_execution_for_environment(
         self, environment_id: UUID
@@ -185,6 +217,11 @@ class MemoryServerRepo:
     async def list_all(self) -> list[Server]:
         return list(self.items.values())
 
+    async def list_all_page(self, limit: int, offset: int) -> tuple[list[Server], int]:
+        rows = sorted(self.items.values(), key=lambda s: s.id)
+        total = len(rows)
+        return rows[offset : offset + limit], total
+
     async def delete(self, server_id: UUID) -> None:
         self.items.pop(server_id, None)
 
@@ -207,6 +244,11 @@ class MemoryProjectRepo:
     async def list_all(self) -> list[Project]:
         return list(self.items.values())
 
+    async def list_all_page(self, limit: int, offset: int) -> tuple[list[Project], int]:
+        rows = sorted(self.items.values(), key=lambda p: p.id)
+        total = len(rows)
+        return rows[offset : offset + limit], total
+
     async def delete(self, project_id: UUID) -> None:
         self.items.pop(project_id, None)
 
@@ -228,6 +270,16 @@ class MemoryEnvironmentRepo:
 
     async def list_by_project(self, project_id: UUID) -> list[Environment]:
         return [env for env in self.items.values() if env.project_id == project_id]
+
+    async def list_by_project_page(
+        self, project_id: UUID, limit: int, offset: int
+    ) -> tuple[list[Environment], int]:
+        rows = sorted(
+            (e for e in self.items.values() if e.project_id == project_id),
+            key=lambda e: e.name,
+        )
+        total = len(rows)
+        return rows[offset : offset + limit], total
 
     async def list_by_pipeline(self, pipeline_id: UUID) -> list[Environment]:
         _ = pipeline_id
@@ -266,6 +318,17 @@ class MemoryPipelineRepo:
             p for p in self.pipelines.values() if p.environment_id == environment_id
         ]
 
+    async def list_by_environment_page(
+        self, environment_id: UUID, limit: int, offset: int
+    ) -> tuple[list[Pipeline], int]:
+        rows = sorted(
+            (p for p in self.pipelines.values() if p.environment_id == environment_id),
+            key=lambda p: p.id,
+        )
+        total = len(rows)
+        page_rows = rows[offset : offset + limit]
+        return [replace(p, steps=()) for p in page_rows], total
+
     async def delete(self, pipeline_id: UUID) -> None:
         self.pipelines.pop(pipeline_id, None)
         self.steps.pop(pipeline_id, None)
@@ -285,6 +348,13 @@ class MemoryPipelineRepo:
 
     async def list_steps(self, pipeline_id: UUID) -> list[PipelineStep]:
         return sorted(self.steps.get(pipeline_id, []), key=lambda s: s.order)
+
+    async def list_steps_page(
+        self, pipeline_id: UUID, limit: int, offset: int
+    ) -> tuple[list[PipelineStep], int]:
+        rows = await self.list_steps(pipeline_id)
+        total = len(rows)
+        return rows[offset : offset + limit], total
 
     async def get_next_step(
         self, pipeline_id: UUID, after_order: int

@@ -1,3 +1,4 @@
+from src.domain.ports.services.i_docker_exec_service import IDockerExecService
 from src.domain.ports.services.i_github_service import IGitHubService
 from src.domain.ports.services.i_notification_service import INotificationService
 from src.domain.ports.services.i_ssh_service import ISSHService
@@ -9,6 +10,7 @@ from src.domain.ports.services.i_key_cipher import IKeyCipher
 from src.domain.ports.services.i_runner_registry import IRunnerRegistry
 
 __all__ = [
+    "IDockerExecService",
     "IGitHubService",
     "INotificationService",
     "ISSHService",

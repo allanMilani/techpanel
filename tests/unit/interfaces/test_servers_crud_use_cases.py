@@ -27,10 +27,11 @@ async def test_list_servers_returns_output_dto_list() -> None:
         )
     )
 
-    out = await ListServers(repo).execute()
+    out = await ListServers(repo).execute(page=1, per_page=20)
 
-    assert len(out) == 1
-    assert out[0].name == "srv-1"
+    assert out.total == 1
+    assert len(out.items) == 1
+    assert out.items[0].name == "srv-1"
 
 
 @pytest.mark.asyncio
@@ -58,6 +59,8 @@ async def test_update_server_changes_fields_and_keeps_creator() -> None:
             port=2222,
             ssh_user="root",
             private_key_plain="NEW_KEY",
+            connection_kind="ssh",
+            docker_container_name=None,
         ),
     )
 
@@ -82,6 +85,8 @@ async def test_update_server_not_found() -> None:
                 port=22,
                 ssh_user="ubuntu",
                 private_key_plain=None,
+                connection_kind="ssh",
+                docker_container_name=None,
             ),
         )
 

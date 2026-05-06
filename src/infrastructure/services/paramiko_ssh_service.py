@@ -58,8 +58,14 @@ class ParamikoSshService(ISSHService):
             )
 
             _stdin, stdout, stderr = client.exec_command(full_command, timeout=300)
+            # Ler stdout/stderr antes de recv_exit_status: caso contrário a saída pode
+            # vir vazia ou o canal pode travar (janela do Paramiko — ver doc de recv_exit_status).
+            out_bytes = stdout.read()
+            err_bytes = stderr.read()
             exit_code = stdout.channel.recv_exit_status()
-            output = stdout.read().decode("utf-8") + stderr.read().decode("utf-8")
+            output = out_bytes.decode("utf-8", errors="replace") + err_bytes.decode(
+                "utf-8", errors="replace"
+            )
 
             return exit_code, output.strip()
         finally:

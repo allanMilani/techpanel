@@ -27,5 +27,6 @@ async def test_list_projects_returns_all() -> None:
         )
     )
     uc = ListProjects(repo)
-    out = await uc.execute()
-    assert len(out) == 2
+    out = await uc.execute(page=1, per_page=20)
+    assert out.total == 2
+    assert len(out.items) == 2

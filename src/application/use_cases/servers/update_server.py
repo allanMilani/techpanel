@@ -1,10 +1,13 @@
 from uuid import UUID
 
-from src.application import NotFoundAppError
+from src.application import NotFoundAppError, ValidationAppError
+from src.application.constants import LOCAL_DOCKER_SSH_KEY_PLACEHOLDER
 from src.application.dtos import ServerOutputDTO, UpdateServerInputDTO
-from src.domain.entities.server import Server
+from src.domain.entities.server import Server, normalize_docker_container_ref
+from src.domain.errors import ValidationError
 from src.domain.ports.repositories import IServerRepository
 from src.domain.ports.services.i_key_cipher import IKeyCipher
+from src.domain.value_objects.server_connection_kind import ServerConnectionKind
 
 
 class UpdateServer:
@@ -19,20 +22,58 @@ class UpdateServer:
         if existing is None:
             raise NotFoundAppError("Server not found")
 
-        encrypted_key = (
-            self.key_cipher.encrypt(dto.private_key_plain)
-            if dto.private_key_plain is not None
-            else existing.private_key_enc
-        )
+        try:
+            kind = ServerConnectionKind(dto.connection_kind)
+        except ValueError as e:
+            raise ValidationAppError("Tipo de conexão inválido.") from e
+
+        if kind == ServerConnectionKind.SSH:
+            docker_name = None
+        else:
+            docker_name = normalize_docker_container_ref(dto.docker_container_name) or None
+
+        plain = (dto.private_key_plain or "").strip()
+        if (
+            kind == ServerConnectionKind.SSH
+            and existing.connection_kind == ServerConnectionKind.LOCAL_DOCKER
+            and not plain
+        ):
+            raise ValidationAppError(
+                "Informe a chave privada SSH ao sair do modo Docker local."
+            )
+
+        if kind == ServerConnectionKind.SSH:
+            encrypted_key = (
+                self.key_cipher.encrypt(plain) if plain else existing.private_key_enc
+            )
+        elif existing.connection_kind == ServerConnectionKind.LOCAL_DOCKER:
+            encrypted_key = existing.private_key_enc
+        else:
+            encrypted_key = self.key_cipher.encrypt(LOCAL_DOCKER_SSH_KEY_PLACEHOLDER)
+
+        try:
+            Server._validate(
+                name=dto.name,
+                host=dto.host,
+                port=dto.port,
+                ssh_user=dto.ssh_user,
+                private_key_enc=encrypted_key,
+                connection_kind=kind,
+                docker_container_name=docker_name,
+            )
+        except ValidationError as e:
+            raise ValidationAppError(str(e)) from e
 
         updated = Server(
             id=existing.id,
-            name=dto.name,
-            host=dto.host,
+            name=dto.name.strip(),
+            host=dto.host.strip(),
             port=dto.port,
-            ssh_user=dto.ssh_user,
+            ssh_user=dto.ssh_user.strip(),
             private_key_enc=encrypted_key,
             created_by=existing.created_by,
+            connection_kind=kind,
+            docker_container_name=docker_name,
         )
 
         persisted = await self.server_repo.update(updated)
@@ -44,4 +85,6 @@ class UpdateServer:
             port=persisted.port,
             ssh_user=persisted.ssh_user,
             created_by=persisted.created_by,
+            connection_kind=persisted.connection_kind.value,
+            docker_container_name=persisted.docker_container_name,
         )

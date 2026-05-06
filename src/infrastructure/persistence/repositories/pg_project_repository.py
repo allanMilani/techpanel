@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from uuid import UUID
-from sqlalchemy import select
+
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.ports.repositories import IProjectRepository
@@ -53,6 +54,18 @@ class PgProjectRepository(IProjectRepository):
     async def list_all(self) -> list[Project]:
         result = await self._session.execute(select(ProjectModel))
         return [project_model_to_entity(row) for row in result.scalars().all()]
+
+    async def list_all_page(self, limit: int, offset: int) -> tuple[list[Project], int]:
+        total = int(
+            await self._session.scalar(select(func.count()).select_from(ProjectModel)) or 0
+        )
+        result = await self._session.execute(
+            select(ProjectModel)
+            .order_by(ProjectModel.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        return [project_model_to_entity(row) for row in result.scalars().all()], total
 
     async def delete(self, project_id: UUID) -> None:
         result = await self._session.execute(

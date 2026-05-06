@@ -1,12 +1,13 @@
+from src.application import NotFoundAppError
 from src.domain.entities.pipeline_step import PipelineStep
-from src.domain.ports.services import IKeyCipher, ISSHService
 from src.domain.ports.repositories import (
     IEnvironmentRepository,
     IPipelineRepository,
     IServerRepository,
 )
-from src.application import NotFoundAppError
-from src.domain.ports.services import IStepRunner
+from src.domain.ports.services import IDockerExecService, IKeyCipher, ISSHService
+from src.domain.ports.services.i_step_runner import IStepRunner
+from src.domain.value_objects.server_connection_kind import ServerConnectionKind
 
 
 class SshCommandRunner(IStepRunner):
@@ -17,12 +18,14 @@ class SshCommandRunner(IStepRunner):
         server_repo: IServerRepository,
         key_cipher: IKeyCipher,
         ssh_service: ISSHService,
+        docker_exec: IDockerExecService,
     ) -> None:
         self.environment_repo = environment_repo
         self.pipeline_repo = pipeline_repo
         self.server_repo = server_repo
         self.key_cipher = key_cipher
         self.ssh_service = ssh_service
+        self.docker_exec = docker_exec
 
     async def run(self, step: PipelineStep) -> tuple[int, str]:
         pipeline = await self.pipeline_repo.get_by_id(step.pipeline_id)
@@ -36,6 +39,19 @@ class SshCommandRunner(IStepRunner):
         server = await self.server_repo.get_by_id(environment.server_id)
         if server is None:
             raise NotFoundAppError("Server not found")
+
+        if server.connection_kind == ServerConnectionKind.LOCAL_DOCKER:
+            container = (server.docker_container_name or "").strip()
+            if not container:
+                return 1, "Servidor Docker local sem nome de container."
+            user = server.ssh_user.strip() or None
+            return await self.docker_exec.execute(
+                container=container,
+                username=user,
+                command=step.command,
+                cwd=step.working_directory,
+                timeout_seconds=step.timeout_seconds,
+            )
 
         private_key = self.key_cipher.decrypt(server.private_key_enc)
         return await self.ssh_service.execute(

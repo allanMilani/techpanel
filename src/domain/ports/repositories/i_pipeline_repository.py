@@ -19,6 +19,11 @@ class IPipelineRepository(ABC):
     async def list_by_environment(self, environment_id: UUID) -> list[Pipeline]: ...
 
     @abstractmethod
+    async def list_by_environment_page(
+        self, environment_id: UUID, limit: int, offset: int
+    ) -> tuple[list[Pipeline], int]: ...
+
+    @abstractmethod
     async def delete(self, pipeline_id: UUID) -> None: ...
 
     @abstractmethod
@@ -32,6 +37,11 @@ class IPipelineRepository(ABC):
 
     @abstractmethod
     async def list_steps(self, pipeline_id: UUID) -> list[PipelineStep]: ...
+
+    @abstractmethod
+    async def list_steps_page(
+        self, pipeline_id: UUID, limit: int, offset: int
+    ) -> tuple[list[PipelineStep], int]: ...
 
     @abstractmethod
     async def get_next_step(

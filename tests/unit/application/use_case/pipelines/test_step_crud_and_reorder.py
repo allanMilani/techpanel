@@ -28,37 +28,37 @@ async def test_step_crud_and_reorder_with_three_steps() -> None:
     s1 = await add_uc.execute(
         AddStepInputDTO(
             pipeline_id=pipeline.id,
-            order=1,
             name="pull",
             step_type=StepType.SSH_COMMAND.value,
             command="git pull",
             on_failure=OnFailurePolicy.STOP.value,
             timeout_seconds=120,
             working_directory="/srv/app",
+            order=1,
         )
     )
     s2 = await add_uc.execute(
         AddStepInputDTO(
             pipeline_id=pipeline.id,
-            order=2,
             name="health",
             step_type=StepType.HTTP_HEALTHCHECK.value,
             command="https://api/health",
             on_failure=OnFailurePolicy.CONTINUE.value,
             timeout_seconds=30,
             working_directory=None,
+            order=2,
         )
     )
     s3 = await add_uc.execute(
         AddStepInputDTO(
             pipeline_id=pipeline.id,
-            order=3,
             name="notify",
             step_type=StepType.NOTIFY_WEBHOOK.value,
             command="https://hooks/notify",
             on_failure=OnFailurePolicy.NOTIFY_AND_STOP.value,
             timeout_seconds=20,
             working_directory=None,
+            order=3,
         )
     )
 
@@ -91,7 +91,7 @@ async def test_step_crud_and_reorder_with_three_steps() -> None:
     assert len(reordered) == 3
 
     get_uc = GetPipeline(repo)
-    relido = await get_uc.execute(pipeline.id)
+    relido = await get_uc.execute_all_steps(pipeline.id)
     assert len(relido) == 3
     assert [x.order for x in relido] == [1, 2, 3]
     assert [x.id for x in relido] == [s3.id, s1.id, s2.id]

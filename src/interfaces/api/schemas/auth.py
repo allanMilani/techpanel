@@ -11,3 +11,19 @@ class LoginResponse(BaseModel):
     token_type: str
     user_id: str
     role: str
+
+
+class MeResponse(BaseModel):
+    user_id: str
+    role: str
+
+
+class RegisterRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class RegisterResponse(BaseModel):
+    user_id: str
+    email: str
+    role: str

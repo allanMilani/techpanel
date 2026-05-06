@@ -50,7 +50,7 @@ O sistema conecta repositórios do GitHub a servidores via SSH. Suporte inicial 
 | Camada | Tecnologia |
 |---|---|
 | Backend | Python + FastAPI |
-| Frontend | HTMX + Jinja2 + Bootstrap 5 |
+| Frontend | Vue 3 + Vite + Tailwind CSS + Font Awesome (SPA em `frontend/`, build em `static/dist/`) |
 | Banco de dados | PostgreSQL 16 (dev e prod) |
 | ORM | SQLAlchemy 2.x + Alembic |
 | Execução remota | Paramiko (SSH) |
@@ -71,7 +71,7 @@ O sistema segue a arquitetura hexagonal (Ports & Adapters), dividida em três ca
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                    INTERFACES (driving)                  │
-│         FastAPI Routers · Templates HTMX/Jinja2          │
+│         FastAPI Routers · Vue SPA (JSON + cookie JWT)       │
 └────────────────────────┬────────────────────────────────┘
                          │ chama
 ┌────────────────────────▼────────────────────────────────┐
@@ -93,7 +93,7 @@ O sistema segue a arquitetura hexagonal (Ports & Adapters), dividida em três ca
 
 **Infrastructure** — implementações concretas dos ports: repositórios PostgreSQL via SQLAlchemy, serviço SSH via Paramiko, integração GitHub via PyGithub.
 
-**Interfaces** — adaptadores de entrada: routers FastAPI, templates Jinja2/HTMX. Convertem HTTP em chamadas aos use cases.
+**Interfaces** — adaptadores de entrada: routers FastAPI (`/api/...`), ficheiros estáticos do SPA e fallback `index.html` para rotas da aplicação. Convertem HTTP em chamadas aos use cases.
 
 ---
 
@@ -215,14 +215,9 @@ techpanel/
 │       │   └── dependencies.py            # Injeção de dependências FastAPI
 │       │
 │       └── web/
-│           └── templates/
-│               ├── base.html
-│               ├── login.html
-│               ├── servers/
-│               ├── projects/
-│               ├── pipelines/             # Cadastro e edição de pipelines
-│               └── panel/                 # TechPanel — execução e histórico
-│
+│           └── static/                    # Assets estáticos + `dist/` (build Vite)
+
+├── frontend/                              # SPA Vue (fonte; `npm run build` → static/dist)
 ├── tests/
 │   ├── unit/
 │   │   ├── domain/
@@ -772,22 +767,9 @@ Resposta HTTP em caso de conflito (`HTTP 409`):
 
 ## 15. Status em tempo real
 
-### Opção A — Polling HTMX (recomendada para início)
+### Opção A — Polling no cliente (implementado)
 
-O painel atualiza o status de cada passo a cada 2 segundos. O polling é interrompido automaticamente quando a execução encerra.
-
-```html
-<div id="execution-panel"
-     hx-get="/api/executions/{{ exec_id }}"
-     hx-trigger="every 2s [window.__execRunning]"
-     hx-swap="outerHTML">
-  ...
-</div>
-
-<script>
-  window.__execRunning = {{ "true" if execution.status == "running" else "false" }};
-</script>
-```
+O painel Vue chama `GET /api/executions/{id}/panel` (e metadados da execução) a cada ~2 segundos. O polling para quando a resposta indica estado terminal (`terminal: true`).
 
 ### Opção B — Server-Sent Events (SSE)
 
@@ -943,7 +925,6 @@ Clicando em qualquer linha abre o detalhe da execução com status passo a passo
 # Framework
 fastapi
 uvicorn[standard]
-jinja2
 python-multipart
 
 # Banco de dados (PostgreSQL)

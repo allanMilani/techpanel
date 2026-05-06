@@ -18,10 +18,11 @@ class PipelineResponse(BaseModel):
     environment_id: UUID
     name: str
     description: str | None = None
+    project_id: UUID | None = None
 
 
 class StepCreateRequest(BaseModel):
-    order: int = Field(ge=1)
+    order: int | None = Field(default=None, ge=1)
     name: str
     step_type: str
     command: str

@@ -29,6 +29,8 @@ def test_list_servers_router() -> None:
                 port=22,
                 ssh_user="ubuntu",
                 created_by=uuid4(),
+                connection_kind="ssh",
+                docker_container_name=None,
             )
         ]
 
@@ -61,6 +63,8 @@ def test_create_server_router() -> None:
             port=22,
             ssh_user="deploy",
             created_by=created_by,
+            connection_kind="ssh",
+            docker_container_name=None,
         )
 
     app.dependency_overrides[get_current_user] = _admin_user
@@ -102,6 +106,8 @@ def test_update_server_router() -> None:
             port=2222,
             ssh_user="root",
             created_by=created_by,
+            connection_kind="ssh",
+            docker_container_name=None,
         )
 
     app.dependency_overrides[get_current_user] = _admin_user

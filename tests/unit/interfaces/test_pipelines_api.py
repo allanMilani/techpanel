@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 
 from main import app
 from src.application.dtos import PipelineOutputDTO, PipelineSummaryDTO
+from src.application.dtos.pagination_dto import PaginatedResult
 from src.interfaces.api.dependencies import (
     CurrentUser,
     get_add_step_use_case,
@@ -37,32 +38,44 @@ def test_pipeline_routes_happy_path() -> None:
 
     @dataclass
     class _ListPipelinesStub:
-        async def execute(self, _environment_id):
-            return [
-                PipelineSummaryDTO(
-                    id=pipeline_id,
-                    environment_id=env_id,
-                    name="deploy",
-                    description="desc",
-                )
-            ]
+        async def execute(self, _environment_id, page, per_page):
+            return PaginatedResult(
+                items=[
+                    PipelineSummaryDTO(
+                        id=pipeline_id,
+                        environment_id=env_id,
+                        name="deploy",
+                        description="desc",
+                    )
+                ],
+                total=1,
+                page=page,
+                per_page=per_page,
+            )
 
-    @dataclass
     class _GetPipelineStub:
-        async def execute(self, _pipeline_id):
-            return [
-                PipelineOutputDTO(
-                    id=step_id,
-                    order=1,
-                    name="pull",
-                    step_type="ssh_command",
-                    command="git pull",
-                    on_failure="stop",
-                    timeout_seconds=120,
-                    working_directory="/srv/app",
-                    is_active=True,
-                )
-            ]
+        _step = PipelineOutputDTO(
+            id=step_id,
+            order=1,
+            name="pull",
+            step_type="ssh_command",
+            command="git pull",
+            on_failure="stop",
+            timeout_seconds=120,
+            working_directory="/srv/app",
+            is_active=True,
+        )
+
+        async def execute(self, _pipeline_id, page, per_page):
+            return PaginatedResult(
+                items=[self._step],
+                total=1,
+                page=page,
+                per_page=per_page,
+            )
+
+        async def execute_all_steps(self, _pipeline_id):
+            return [self._step]
 
     @dataclass
     class _UpdatePipelineStub:

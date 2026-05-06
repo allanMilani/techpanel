@@ -7,3 +7,4 @@ class ExecutionStatus(StrEnum):
     SUCCESS = "success"
     FAILED = "failed"
     BLOCKED = "blocked"
+    CANCELLED = "cancelled"

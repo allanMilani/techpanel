@@ -14,4 +14,8 @@ def execution_model_to_entity(row: ExecutionModel) -> Execution:
         status=ExecutionStatus(
             row.status.value if hasattr(row.status, "value") else str(row.status)
         ),
+        created_at=row.created_at,
+        triggered_by_ip=row.triggered_by_ip,
+        started_at=row.started_at,
+        finished_at=row.finished_at,
     )

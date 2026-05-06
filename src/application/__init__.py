@@ -1,4 +1,5 @@
 from src.application.errors import (
+    ActiveExecutionConflictError,
     ApplicationError,
     ConflictAppError,
     ForbiddenAppError,
@@ -14,4 +15,5 @@ __all__ = [
     "UnauthorizedAppError",
     "ForbiddenAppError",
     "ConflictAppError",
+    "ActiveExecutionConflictError",
 ]

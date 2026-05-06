@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Annotated
 
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Cookie, Depends, Header, HTTPException, status
 
 from src.application.use_cases.auth.login import Login
 from src.application.use_cases.auth.register_user import RegisterUser
@@ -54,17 +54,45 @@ def get_register_user_use_case(
     )
 
 
+def _raw_token_from_request(
+    authorization: str | None,
+    access_token: str | None,
+) -> str | None:
+    if authorization and authorization.startswith("Bearer "):
+        return authorization.removeprefix("Bearer ").strip()
+    if access_token and access_token.strip():
+        return access_token.strip()
+    return None
+
+
+def get_optional_current_user(
+    token_service: Annotated[ITokenService, Depends(get_token_service)],
+    authorization: Annotated[str | None, Header(alias="Authorization")] = None,
+    access_token: Annotated[str | None, Cookie()] = None,
+) -> CurrentUser | None:
+    raw_token = _raw_token_from_request(authorization, access_token)
+    if not raw_token:
+        return None
+    try:
+        payload = token_service.decode_access_token(raw_token)
+        return CurrentUser(sub=payload.sub, role=payload.role)
+    except Exception:
+        return None
+
+
 def get_current_user(
     token_service: Annotated[ITokenService, Depends(get_token_service)],
     authorization: Annotated[str | None, Header(alias="Authorization")] = None,
+    access_token: Annotated[str | None, Cookie()] = None,
 ) -> CurrentUser:
-    if not authorization or not authorization.startswith("Bearer "):
+    raw_token = _raw_token_from_request(authorization, access_token)
+
+    if not raw_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing or invalid authorization header",
+            detail="Missing or invalid authorization",
         )
 
-    raw_token = authorization.removeprefix("Bearer ").strip()
     try:
         payload = token_service.decode_access_token(raw_token)
         return CurrentUser(sub=payload.sub, role=payload.role)

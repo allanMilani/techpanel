@@ -17,12 +17,14 @@ from src.interfaces.api.dependencies import (
     get_list_github_repositories_use_case,
     get_start_github_oauth_use_case,
 )
+from src.interfaces.api.dependencies.pagination import Pagination, get_pagination
 from src.interfaces.api.schemas.github import (
     GitHubOAuthCallbackResponse,
     GitHubOAuthStartResponse,
     GitHubRefsResponse,
     GitHubRepositoryResponse,
 )
+from src.interfaces.api.schemas.paged_lists import GitHubRepositoriesPageResponse
 
 router = APIRouter(tags=["github"])
 
@@ -80,19 +82,30 @@ async def github_oauth_callback(
 
 @router.get(
     "/github/repos",
-    response_model=list[GitHubRepositoryResponse],
+    response_model=GitHubRepositoriesPageResponse,
     status_code=status.HTTP_200_OK,
 )
 async def list_github_repositories(
     _: Annotated[CurrentUser, Depends(get_current_user)],
+    pagination: Annotated[Pagination, Depends(get_pagination)],
     github_token: str = Header(..., alias="X-GitHub-Token"),
     use_case: Annotated[
         ListGitHubRepositories,
         Depends(get_list_github_repositories_use_case),
     ] = None,
-) -> list[GitHubRepositoryResponse]:
+) -> GitHubRepositoriesPageResponse:
     repos = await use_case.execute(access_token=github_token)
-    return [GitHubRepositoryResponse(full_name=repo.full_name) for repo in repos]
+    total = len(repos)
+    offset = (pagination.page - 1) * pagination.per_page
+    slice_repos = repos[offset : offset + pagination.per_page]
+    total_pages = 0 if total == 0 else (total + pagination.per_page - 1) // pagination.per_page
+    return GitHubRepositoriesPageResponse(
+        items=[GitHubRepositoryResponse(full_name=repo.full_name) for repo in slice_repos],
+        total=total,
+        page=pagination.page,
+        per_page=pagination.per_page,
+        total_pages=total_pages,
+    )
 
 
 @router.get(

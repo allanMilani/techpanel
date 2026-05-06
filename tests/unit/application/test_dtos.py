@@ -44,14 +44,24 @@ def test_login_dtos_immutability() -> None:
 def test_add_step_dto_defaults() -> None:
     dto = AddStepInputDTO(
         pipeline_id=UUID("00000000-0000-0000-0000-000000000001"),
-        order=1,
         name="s",
         step_type="ssh_command",
         command="echo",
         on_failure="stop",
+        order=1,
     )
     assert dto.timeout_seconds == 300
     assert dto.working_directory is None
+    assert dto.order == 1
+
+    auto_order = AddStepInputDTO(
+        pipeline_id=UUID("00000000-0000-0000-0000-000000000001"),
+        name="t",
+        step_type="ssh_command",
+        command="x",
+        on_failure="stop",
+    )
+    assert auto_order.order is None
 
 
 def test_create_pipeline_input_has_created_by() -> None:
@@ -106,6 +116,7 @@ def test_execution_dtos_and_mappers() -> None:
     out = execution_to_output_dto(e)
     assert isinstance(out, ExecutionOutputDTO)
     assert out.status == "pending"
+    assert out.created_at == e.created_at
 
     se = StepExecution.create(
         execution_id=str(e.id),

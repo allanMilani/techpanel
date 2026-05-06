@@ -75,7 +75,7 @@ async def test_list_project_environments_returns_only_that_project() -> None:
     await env_repo.create(e_other)
 
     uc = ListProjectEnvironments(project_repo, env_repo)
-    result = await uc.execute(p1.id)
+    result = await uc.execute(p1.id, page=1, per_page=20)
 
-    ids = {e.id for e in result}
+    ids = {e.id for e in result.items}
     assert ids == {e1.id, e2.id}

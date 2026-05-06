@@ -3,6 +3,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from src.application import (
+    ActiveExecutionConflictError,
     ApplicationError,
     ConflictAppError,
     ForbiddenAppError,
@@ -32,10 +33,10 @@ def register_error_handlers(app: FastAPI) -> None:
         _request: Request,
         exc: ApplicationError,
     ) -> JSONResponse:
-        return JSONResponse(
-            status_code=_status_from_error(exc),
-            content={"error": exc.__class__.__name__, "message": str(exc)},
-        )
+        content: dict = {"error": exc.__class__.__name__, "message": str(exc)}
+        if isinstance(exc, ActiveExecutionConflictError):
+            content["blocking_execution_id"] = str(exc.blocking_execution_id)
+        return JSONResponse(status_code=_status_from_error(exc), content=content)
 
     @app.exception_handler(RequestValidationError)
     async def handle_validation_error(

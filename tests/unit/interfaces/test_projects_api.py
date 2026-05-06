@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 
 from main import app
 from src.application.dtos import ProjectOutputDTO
+from src.application.dtos.pagination_dto import PaginatedResult
 from src.domain.entities.environment import Environment
 from src.domain.value_objects.environment_type import EnvironmentType
 from src.interfaces.api.dependencies import (
@@ -33,8 +34,13 @@ def test_projects_crud_routes() -> None:
     )
 
     class ListProjectsStub:
-        async def execute(self) -> list[ProjectOutputDTO]:
-            return [current_project]
+        async def execute(self, page: int, per_page: int) -> PaginatedResult[ProjectOutputDTO]:
+            return PaginatedResult(
+                items=[current_project],
+                total=1,
+                page=page,
+                per_page=per_page,
+            )
 
     class CreateProjectStub:
         async def execute(self, _dto) -> ProjectOutputDTO:
@@ -67,7 +73,7 @@ def test_projects_crud_routes() -> None:
             headers={"Authorization": "Bearer test"},
         )
         assert list_response.status_code == 200
-        assert list_response.json()[0]["id"] == str(project_id)
+        assert list_response.json()["items"][0]["id"] == str(project_id)
 
         create_response = client.post(
             "/api/projects/",
@@ -137,8 +143,13 @@ def test_project_with_staging_and_production_is_listed_via_api() -> None:
             return env_production
 
     class ListProjectEnvironmentsStub:
-        async def execute(self, _project_id):
-            return created_envs
+        async def execute(self, _project_id, page: int, per_page: int):
+            return PaginatedResult(
+                items=created_envs,
+                total=len(created_envs),
+                page=page,
+                per_page=per_page,
+            )
 
     class UpdateEnvironmentStub:
         async def execute(self, _project_id, _environment_id, _dto):
@@ -183,8 +194,9 @@ def test_project_with_staging_and_production_is_listed_via_api() -> None:
             headers={"Authorization": "Bearer test"},
         )
         assert list_response.status_code == 200
-        assert len(list_response.json()) == 2
-        listed_types = {env["environment_type"] for env in list_response.json()}
+        body = list_response.json()
+        assert len(body["items"]) == 2
+        listed_types = {env["environment_type"] for env in body["items"]}
         assert listed_types == {"staging", "production"}
 
     app.dependency_overrides.clear()

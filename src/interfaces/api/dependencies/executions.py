@@ -2,6 +2,9 @@ from typing import Annotated
 
 from fastapi import Depends
 
+from src.application.use_cases.executions.cancel_execution import CancelExecution
+from src.application.use_cases.executions.get_execution_logs import GetExecutionLogs
+from src.application.use_cases.executions.get_history import GetHistory
 from src.application.use_cases.executions.start_execution import StartExecution
 from src.domain.ports.repositories import (
     IEnvironmentRepository,
@@ -24,6 +27,18 @@ from src.interfaces.api.dependencies.runners import (
 )
 
 
+def get_cancel_execution_use_case(
+    execution_repo: Annotated[IExecutionRepository, Depends(get_execution_repository)],
+    step_execution_repo: Annotated[
+        IStepExecutionRepository, Depends(get_step_execution_repository)
+    ],
+) -> CancelExecution:
+    return CancelExecution(
+        execution_repo=execution_repo,
+        step_execution_repo=step_execution_repo,
+    )
+
+
 def get_start_execution_use_case(
     pipeline_repo: Annotated[IPipelineRepository, Depends(get_pipeline_repository)],
     environment_repo: Annotated[
@@ -37,6 +52,24 @@ def get_start_execution_use_case(
     return StartExecution(
         pipeline_repo=pipeline_repo,
         environment_repo=environment_repo,
+        execution_repo=execution_repo,
+        step_execution_repo=step_execution_repo,
+    )
+
+
+def get_get_history_use_case(
+    execution_repo: Annotated[IExecutionRepository, Depends(get_execution_repository)],
+) -> GetHistory:
+    return GetHistory(execution_repo)
+
+
+def get_get_execution_logs_use_case(
+    execution_repo: Annotated[IExecutionRepository, Depends(get_execution_repository)],
+    step_execution_repo: Annotated[
+        IStepExecutionRepository, Depends(get_step_execution_repository)
+    ],
+) -> GetExecutionLogs:
+    return GetExecutionLogs(
         execution_repo=execution_repo,
         step_execution_repo=step_execution_repo,
     )

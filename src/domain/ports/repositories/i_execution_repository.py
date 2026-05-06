@@ -18,6 +18,11 @@ class IExecutionRepository(ABC):
     async def list_by_pipeline(self, pipeline_id: UUID) -> list[Execution]: ...
 
     @abstractmethod
+    async def list_by_pipeline_page(
+        self, pipeline_id: UUID, limit: int, offset: int
+    ) -> tuple[list[Execution], int]: ...
+
+    @abstractmethod
     async def get_active_execution_for_environment(
         self, environment_id: UUID
     ) -> Execution | None: ...

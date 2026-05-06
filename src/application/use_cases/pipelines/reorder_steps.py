@@ -26,6 +26,25 @@ class ReorderSteps:
                 "Ordered step IDs do not match the pipeline's current steps"
             )
 
+        # Duas fases: a constraint única (pipeline_id, order) quebraria se
+        # atribuíssemos 1..n em sequência (ex.: dois passos com order=1).
+        sorted_by_current = sorted(steps, key=lambda s: s.order)
+        for i, step in enumerate(sorted_by_current):
+            await self.pipeline_repo.update_step(
+                PipelineStep(
+                    id=step.id,
+                    pipeline_id=step.pipeline_id,
+                    order=-(i + 1),
+                    name=step.name,
+                    step_type=step.step_type,
+                    command=step.command,
+                    on_failure=step.on_failure,
+                    timeout_seconds=step.timeout_seconds,
+                    working_directory=step.working_directory,
+                    is_active=step.is_active,
+                )
+            )
+
         reordered: list[PipelineOutputDTO] = []
         for idx, step_id in enumerate(dto.ordered_step_ids, start=1):
             step = next(s for s in steps if s.id == step_id)
