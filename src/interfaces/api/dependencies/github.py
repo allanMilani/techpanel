@@ -15,17 +15,13 @@ from src.infrastructure.services.pygithub_service import PyGitHubService
 
 def get_github_service() -> IGitHubService:
     settings = get_settings()
-    if (
-        not settings.github_client_id
-        or not settings.github_client_secret
-        or not settings.github_oauth_callback_url
-    ):
-        raise RuntimeError("GitHub OAuth settings are not configured")
-
+    callback = (settings.github_oauth_callback_url or "").strip() or (
+        "http://127.0.0.1:8000/api/auth/github/callback"
+    )
     return PyGitHubService(
-        client_id=settings.github_client_id,
-        client_secret=settings.github_client_secret,
-        callback_url=settings.github_oauth_callback_url,
+        client_id=(settings.github_client_id or "").strip(),
+        client_secret=(settings.github_client_secret or "").strip(),
+        callback_url=callback,
     )
 
 

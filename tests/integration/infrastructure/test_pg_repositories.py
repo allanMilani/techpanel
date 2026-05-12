@@ -29,11 +29,14 @@ from src.domain.value_objects.on_failure_policy import OnFailurePolicy
 from src.domain.value_objects.step_execution_status import StepExecutionStatus
 from src.domain.value_objects.user_role import UserRole
 from tests.unit.application.fakes import (
+    FakeDockerExecService,
     FakeKeyCipher,
     FakeNotificationService,
     FakePasswordHasher,
     FakeRunnerRegistry,
+    FakeSSHService,
     FakeTokenService,
+    FakeWorkspaceGitPrepare,
     MemoryEnvironmentRepo,
     MemoryExecutionRepo,
     MemoryPipelineRepo,
@@ -156,6 +159,9 @@ async def test_integration_deploy_flow_with_fakes() -> None:
         step_execution_repo=step_execution_repo,
         pipeline_repo=pipeline_repo,
         runner_registry=FakeRunnerRegistry(exit_code=0),
+        workspace_git_prepare=FakeWorkspaceGitPrepare(),
+        ssh_service=FakeSSHService(),
+        docker_exec=FakeDockerExecService(),
     )
     await run_next_step_until_terminal(execution_repo, run_uc, started.id)
 
@@ -228,6 +234,9 @@ async def test_integration_notify_and_stop_with_fakes() -> None:
         step_execution_repo=step_execution_repo,
         pipeline_repo=pipeline_repo,
         runner_registry=FakeRunnerRegistry(exit_code=1),
+        workspace_git_prepare=FakeWorkspaceGitPrepare(),
+        ssh_service=FakeSSHService(),
+        docker_exec=FakeDockerExecService(),
         notification_service=notification_service,
     )
     await run_next_step_until_terminal(execution_repo, run_uc, started.id)

@@ -27,10 +27,18 @@ interface Row {
 }
 
 const rows = ref<Row[]>([])
+const projects = ref<Project[]>([])
 const page = ref(1)
 const { isAdmin } = useAuth()
 
 const perPage = DEFAULT_PAGE_SIZE
+
+/** Primeiro projeto (nome) para o atalho "Novo ambiente"; com vários projetos use Projetos para outro. */
+const newEnvironmentTo = computed(() => {
+  const list = [...projects.value].sort((a, b) => a.name.localeCompare(b.name, 'pt'))
+  if (!list.length) return '/projects'
+  return `/projects/${list[0].id}/environments/new`
+})
 
 const total = computed(() => rows.value.length)
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / perPage)))
@@ -45,9 +53,10 @@ function onPageChange(p: number) {
 }
 
 onMounted(async () => {
-  const projects = await fetchAllPaged<Project>('/api/projects/')
+  const list = await fetchAllPaged<Project>('/api/projects/')
+  projects.value = list
   const lists = await Promise.all(
-    projects.map(async (project) => {
+    list.map(async (project) => {
       const envs = await fetchAllPaged<Environment>(`/api/projects/${project.id}/environments`)
       return envs.map((environment) => ({ project, environment }))
     }),
@@ -66,8 +75,26 @@ onMounted(async () => {
       <font-awesome-icon :icon="['fas', 'arrow-left']" />
       Projetos
     </RouterLink>
-    <h1 class="mb-2 text-2xl font-semibold text-slate-800">Ambientes</h1>
-    <p class="mb-6 text-slate-600">Todos os ambientes, por projeto.</p>
+
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <div class="min-w-0">
+        <h1 class="text-2xl font-semibold text-slate-800">Ambientes</h1>
+        <p class="mt-1 text-sm text-slate-600">Todos os ambientes, por projeto.</p>
+      </div>
+      <RouterLink
+        v-if="isAdmin && projects.length"
+        :to="newEnvironmentTo"
+        class="inline-flex items-center gap-2 rounded-md bg-sky-600 px-3 py-2 text-sm font-medium text-white hover:bg-sky-700"
+        :title="
+          projects.length > 1
+            ? 'Abre o formulário no primeiro projeto (A–Z). Para outro projeto, use Projetos.'
+            : 'Abrir formulário de novo ambiente'
+        "
+      >
+        <font-awesome-icon :icon="['fas', 'plus']" />
+        Novo ambiente
+      </RouterLink>
+    </div>
 
     <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
       <table class="min-w-full divide-y divide-slate-200 text-sm">

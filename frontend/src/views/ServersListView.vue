@@ -47,11 +47,19 @@ onMounted(async () => {
 
 async function testConn(id: string) {
   try {
-    const r = await apiJson<{ ok: boolean }>(`/api/servers/${id}/test`, { method: 'POST' })
-    showToast(
-      r.ok ? `Conexão OK (${id}).` : `Conexão falhou (${id}).`,
-      r.ok ? 'success' : 'error',
-    )
+    const r = await apiJson<{
+      ok: boolean
+      error_code?: string | null
+      error_detail?: string | null
+    }>(`/api/servers/${id}/test`, { method: 'POST' })
+    if (r.ok) {
+      showToast(`Conexão OK (${id}).`, 'success')
+      return
+    }
+    const code = r.error_code?.trim() || 'DESCONHECIDO'
+    const detail = (r.error_detail ?? '').trim()
+    const suffix = detail ? ` — ${detail.length > 200 ? `${detail.slice(0, 197)}…` : detail}` : ''
+    showToast(`Conexão falhou (${id}). Código: ${code}${suffix}`, 'error', 12000)
   } catch (e) {
     const msg = e instanceof ApiError ? e.detail ?? e.message : 'Falha ao testar conexão.'
     showToast(msg, 'error')

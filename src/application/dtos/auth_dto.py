@@ -14,12 +14,15 @@ class LoginOutputDTO:
     token_type: str
     user_id: UUID
     role: str
+    display_name: str | None
+    has_github_token: bool
 
 
 @dataclass(slots=True, frozen=True)
 class RegisterUserInputDTO:
     email: str
     password: str
+    display_name: str | None = None
 
 
 @dataclass(slots=True, frozen=True)

@@ -28,3 +28,17 @@ class EnvironmentResponse(BaseModel):
     is_active: bool
 
     model_config = {"from_attributes": True}
+
+
+class ServerDotenvResponse(BaseModel):
+    content: str
+    exists: bool
+    path: str
+
+
+class ServerDotenvPutBody(BaseModel):
+    content: str
+
+
+class ServerDotenvPutResponse(BaseModel):
+    path: str

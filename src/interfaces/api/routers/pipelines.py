@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from src.application.dtos import (
     AddStepInputDTO,
@@ -18,10 +18,13 @@ from src.application.use_cases.pipelines.delete_step import DeleteStep
 from src.application.use_cases.pipelines.get_pipeline import GetPipeline
 from src.application.use_cases.pipelines.list_pipelines import ListPipelines
 from src.application.use_cases.pipelines.reorder_steps import ReorderSteps
-from src.application.use_cases.executions.get_history import GetHistory
+from src.application.use_cases.pipelines.resolve_workspace_github_repo import (
+    ResolveWorkspaceGitHubRepository,
+)
 from src.application.use_cases.pipelines.update_pipeline import UpdatePipeline
 from src.application.use_cases.pipelines.update_step import UpdateStep
-from src.domain.ports.repositories import IPipelineRepository
+from src.application.use_cases.executions.get_history import GetHistory
+from src.domain.ports.repositories import IPipelineRepository, IProjectRepository
 from src.interfaces.api.dependencies import (
     CurrentUser,
     get_add_step_use_case,
@@ -46,7 +49,9 @@ from src.interfaces.api.schemas.paged_lists import (
 from src.interfaces.api.dependencies.core import (
     get_environment_repository,
     get_pipeline_repository,
+    get_project_repository,
 )
+from src.interfaces.api.dependencies.pipelines import get_resolve_workspace_github_repo
 from src.interfaces.api.schemas import ExecutionResponse
 from src.interfaces.api.schemas.pipelines import (
     PipelineCreateRequest,
@@ -95,18 +100,45 @@ async def get_pipeline_summary(
     _: Annotated[CurrentUser, Depends(get_current_user)],
     repo: Annotated[IPipelineRepository, Depends(get_pipeline_repository)],
     env_repo: Annotated[object, Depends(get_environment_repository)],
+    project_repo: Annotated[IProjectRepository, Depends(get_project_repository)],
+    resolve_refs_uc: Annotated[
+        ResolveWorkspaceGitHubRepository,
+        Depends(get_resolve_workspace_github_repo),
+    ],
+    resolve_workspace_github_repo: Annotated[
+        bool,
+        Query(
+            description=(
+                "Se true, tenta obter owner/repo do GitHub a partir de "
+                "`git remote get-url origin` no diretório efetivo do projeto no servidor."
+            ),
+        ),
+    ] = False,
 ) -> PipelineResponse:
     pipeline = await repo.get_by_id(pipeline_id)
     if pipeline is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
     env = await env_repo.get_by_id(pipeline.environment_id)
     project_id = env.project_id if env is not None else None
+    repo_github: str | None = None
+    if project_id is not None:
+        project = await project_repo.get_by_id(project_id)
+        if project is not None:
+            repo_github = project.repo_github
+
+    refs_from_workspace: str | None = None
+    if resolve_workspace_github_repo:
+        refs_from_workspace = await resolve_refs_uc.execute(pipeline_id)
+
     return PipelineResponse(
         id=pipeline.id,
         environment_id=pipeline.environment_id,
         name=pipeline.name,
         description=pipeline.description,
+        run_git_workspace_sync=pipeline.run_git_workspace_sync,
         project_id=project_id,
+        repo_github=repo_github,
+        refs_repository_full_name=refs_from_workspace,
     )
 
 
@@ -150,6 +182,7 @@ async def list_pipelines(
                 environment_id=p.environment_id,
                 name=p.name,
                 description=p.description,
+                run_git_workspace_sync=p.run_git_workspace_sync,
             )
             for p in out.items
         ],
@@ -177,6 +210,7 @@ async def create_pipeline(
             name=payload.name,
             description=payload.description,
             created_by=UUID(current_user.sub),
+            run_git_workspace_sync=payload.run_git_workspace_sync,
         )
     )
     return PipelineResponse(
@@ -184,6 +218,7 @@ async def create_pipeline(
         environment_id=out.environment_id,
         name=out.name,
         description=out.description,
+        run_git_workspace_sync=out.run_git_workspace_sync,
     )
 
 
@@ -224,6 +259,7 @@ async def update_pipeline(
         UpdatePipelineInputDTO(
             name=payload.name,
             description=payload.description,
+            run_git_workspace_sync=payload.run_git_workspace_sync,
         ),
     )
     return PipelineResponse(
@@ -231,6 +267,7 @@ async def update_pipeline(
         environment_id=out.environment_id,
         name=out.name,
         description=out.description,
+        run_git_workspace_sync=out.run_git_workspace_sync,
     )
 
 

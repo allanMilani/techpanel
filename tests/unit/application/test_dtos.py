@@ -1,5 +1,7 @@
 from uuid import UUID
 
+from dataclasses import replace
+
 from src.application.dtos import (
     AddStepInputDTO,
     CreatePipelineInputDTO,
@@ -37,6 +39,8 @@ def test_login_dtos_immutability() -> None:
         token_type="Bearer",
         user_id=UUID("00000000-0000-0000-0000-000000000001"),
         role="admin",
+        display_name="Admin",
+        has_github_token=False,
     )
     assert out.token_type == "Bearer"
 
@@ -125,6 +129,11 @@ def test_execution_dtos_and_mappers() -> None:
     )
     seo = step_execution_to_output_dto(se)
     assert seo.status == StepExecutionStatus.PENDING.value
+    assert seo.pipeline_step_id == UUID("00000000-0000-0000-0000-000000000003")
+
+    se_orphan = replace(se, pipeline_step_id=None)
+    seo2 = step_execution_to_output_dto(se_orphan)
+    assert seo2.pipeline_step_id is None
 
 
 def test_pipeline_mappers() -> None:

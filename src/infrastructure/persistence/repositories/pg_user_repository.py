@@ -7,7 +7,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.domain.entities import User
 from src.domain.ports.repositories import IUserRepository
 from src.infrastructure.persistence.models import UserModel
-from src.infrastructure.persistence.mappers import user_model_to_entity
+from src.infrastructure.persistence.mappers import (
+    apply_user_entity_to_model,
+    user_model_to_entity,
+)
 
 
 class PgUserRepository(IUserRepository):
@@ -21,6 +24,8 @@ class PgUserRepository(IUserRepository):
             password_hash=user.password_hash,
             role=user.role.value if hasattr(user.role, "value") else str(user.role),
             is_active=user.is_active,
+            display_name=user.display_name,
+            github_token_enc=user.github_token_enc,
         )
 
         self._session.add(row)
@@ -40,3 +45,14 @@ class PgUserRepository(IUserRepository):
         )
         row = result.scalar_one_or_none()
         return user_model_to_entity(row) if row else None
+
+    async def update(self, user: User) -> User:
+        result = await self._session.execute(
+            select(UserModel).where(UserModel.id == user.id)
+        )
+        row = result.scalar_one_or_none()
+        if row is None:
+            raise ValueError(f"User with id {user.id} not found")
+        apply_user_entity_to_model(user, row)
+        await self._session.flush()
+        return user_model_to_entity(row)

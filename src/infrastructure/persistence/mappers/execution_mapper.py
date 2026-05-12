@@ -18,4 +18,6 @@ def execution_model_to_entity(row: ExecutionModel) -> Execution:
         triggered_by_ip=row.triggered_by_ip,
         started_at=row.started_at,
         finished_at=row.finished_at,
+        workspace_prepare_log=getattr(row, "workspace_prepare_log", None),
+        workspace_prepare_exit_code=getattr(row, "workspace_prepare_exit_code", None),
     )

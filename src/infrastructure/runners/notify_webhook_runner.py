@@ -1,9 +1,14 @@
 import httpx
+from uuid import UUID
+
 from src.domain.entities.pipeline_step import PipelineStep
 
 
 class NotifyWebhookRunner:
-    async def run(self, step: PipelineStep) -> tuple[int, str]:
+    async def run(
+        self, step: PipelineStep, *, execution_id: UUID | None = None
+    ) -> tuple[int, str]:
+        _ = execution_id
         webhook_url = step.command.strip()
         payload = {"message": "pipeline notification step"}
         async with httpx.AsyncClient(timeout=step.timeout_seconds) as client:

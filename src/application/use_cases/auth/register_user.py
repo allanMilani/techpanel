@@ -27,6 +27,7 @@ class RegisterUser:
                 email=normalized_email,
                 password_hash=password_hash,
                 role=UserRole.VIEWER,
+                display_name=dto.display_name,
             )
         )
 

@@ -12,9 +12,16 @@ class User:
     password_hash: str
     role: UserRole
     is_active: bool
+    display_name: str | None = None
+    github_token_enc: str | None = None
 
     @staticmethod
-    def create(email: str, password_hash: str, role: UserRole) -> "User":
+    def create(
+        email: str,
+        password_hash: str,
+        role: UserRole,
+        display_name: str | None = None,
+    ) -> "User":
         if not email:
             raise ValidationError("Email is required")
 
@@ -27,10 +34,16 @@ class User:
         if "@" not in email:
             raise ValidationError("Invalid email")
 
+        dn: str | None = None
+        if display_name is not None and display_name.strip():
+            dn = display_name.strip()[:255]
+
         return User(
             id=uuid4(),
             email=email,
             password_hash=password_hash,
             role=role,
             is_active=True,
+            display_name=dn,
+            github_token_enc=None,
         )

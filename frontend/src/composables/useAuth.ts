@@ -5,6 +5,8 @@ import { apiJson, apiJsonNoBody } from './useApi'
 export interface Me {
   user_id: string
   role: string
+  display_name?: string | null
+  has_github_token?: boolean
 }
 
 const me = ref<Me | null | undefined>(undefined)

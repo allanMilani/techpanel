@@ -44,6 +44,11 @@ class FakeDockerExecService:
     ) -> None:
         self.test_ok = test_ok
         self.exec_result = exec_result
+        self.last_execute_kwargs: dict[str, object] = {}
+        self.released_sessions: list[UUID] = []
+
+    async def release_pipeline_session(self, execution_id: UUID) -> None:
+        self.released_sessions.append(execution_id)
 
     async def test_container(self, container: str) -> bool:
         _ = container
@@ -56,19 +61,49 @@ class FakeDockerExecService:
         command: str,
         cwd: str | None,
         timeout_seconds: int,
+        *,
+        execution_id: UUID | None = None,
+        pipeline_initial_directory: str | None = None,
     ) -> tuple[int, str]:
-        _ = container, username, command, cwd, timeout_seconds
+        self.last_execute_kwargs = {
+            "container": container,
+            "username": username,
+            "command": command,
+            "cwd": cwd,
+            "timeout_seconds": timeout_seconds,
+            "execution_id": execution_id,
+            "pipeline_initial_directory": pipeline_initial_directory,
+        }
         return self.exec_result
 
 
 class FakeSSHService:
-    def __init__(self, result: bool = True) -> None:
+    def __init__(
+        self,
+        result: bool = True,
+        *,
+        execute_return: tuple[int, str] | None = None,
+    ) -> None:
         self.result = result
+        self.execute_return = execute_return
+        self.last_execute_kwargs: dict[str, object] = {}
+        self.released_sessions: list[UUID] = []
+
+    async def release_pipeline_session(self, execution_id: UUID) -> None:
+        self.released_sessions.append(execution_id)
 
     async def test_connection(
-        self, host: str, port: int, username: str, private_key: str
-    ) -> bool:
-        return self.result
+        self,
+        host: str,
+        port: int,
+        username: str,
+        private_key: str,
+        *,
+        strict_host_key_checking: bool = False,
+    ) -> tuple[bool, str | None, str | None]:
+        if self.result:
+            return True, None, None
+        return False, "FAKE_SSH_TEST_FAILED", "FakeSSHService configurado para falhar."
 
     async def execute(
         self,
@@ -78,8 +113,36 @@ class FakeSSHService:
         private_key: str,
         command: str,
         cwd: str | None = None,
+        *,
+        strict_host_key_checking: bool = False,
+        timeout_seconds: int = 300,
+        execution_id: UUID | None = None,
+        pipeline_initial_directory: str | None = None,
     ) -> tuple[int, str]:
+        self.last_execute_kwargs = {
+            "timeout_seconds": timeout_seconds,
+            "command": command,
+            "cwd": cwd,
+            "strict_host_key_checking": strict_host_key_checking,
+            "execution_id": execution_id,
+            "pipeline_initial_directory": pipeline_initial_directory,
+        }
+        if self.execute_return is not None:
+            return self.execute_return
+        _ = timeout_seconds
         return 0, "ok"
+
+
+class FakeWorkspaceGitPrepare:
+    """Substitui WorkspaceGitPrepare em testes de RunNextStep."""
+
+    def __init__(self, result: tuple[int, str] = (0, "git ok")) -> None:
+        self.result = result
+        self.calls: list[tuple[UUID, str]] = []
+
+    async def run(self, *, pipeline: Pipeline, branch_or_tag: str) -> tuple[int, str]:
+        self.calls.append((pipeline.id, branch_or_tag))
+        return self.result
 
 
 class FakeRunner:
@@ -87,7 +150,10 @@ class FakeRunner:
         self.exit_code = exit_code
         self.log = log
 
-    async def run(self, step: PipelineStep) -> tuple[int, str]:
+    async def run(
+        self, step: PipelineStep, *, execution_id: UUID | None = None
+    ) -> tuple[int, str]:
+        _ = execution_id
         return self.exit_code, self.log
 
 

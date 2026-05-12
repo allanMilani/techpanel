@@ -44,8 +44,10 @@ from src.interfaces.api.dependencies.projects import (
     get_link_environment,
     get_list_project_environments,
     get_list_projects,
+    get_read_server_dotenv,
     get_update_environment,
     get_update_project,
+    get_write_server_dotenv,
 )
 
 from src.interfaces.api.dependencies.pipelines import (
@@ -66,6 +68,12 @@ from src.interfaces.api.dependencies.github import (
     get_list_github_refs_use_case,
     get_list_github_repositories_use_case,
     get_start_github_oauth_use_case,
+)
+from src.interfaces.api.dependencies.users import (
+    get_get_my_profile_use_case,
+    get_list_my_github_repositories_use_case,
+    get_search_my_github_refs_use_case,
+    get_update_my_profile_use_case,
 )
 
 __all__ = [
@@ -106,6 +114,8 @@ __all__ = [
     "get_link_environment",
     "get_list_project_environments",
     "get_update_environment",
+    "get_read_server_dotenv",
+    "get_write_server_dotenv",
     "get_create_pipeline_use_case",
     "get_list_pipelines_use_case",
     "get_get_pipeline_use_case",
@@ -120,4 +130,8 @@ __all__ = [
     "get_handle_github_oauth_callback_use_case",
     "get_list_github_repositories_use_case",
     "get_list_github_refs_use_case",
+    "get_get_my_profile_use_case",
+    "get_update_my_profile_use_case",
+    "get_list_my_github_repositories_use_case",
+    "get_search_my_github_refs_use_case",
 ]

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import InputFieldLabel from './InputFieldLabel.vue'
+
 export interface SelectOption {
   value: string
   label: string
@@ -12,6 +14,8 @@ defineProps<{
   required?: boolean
   hint?: string
   disabled?: boolean
+  docHref?: string
+  docAriaLabel?: string
 }>()
 
 const emit = defineEmits<{
@@ -21,10 +25,13 @@ const emit = defineEmits<{
 
 <template>
   <div class="mb-4">
-    <label :for="id" class="mb-1 block text-sm font-medium text-slate-700">
-      {{ label }}
-      <span v-if="hint" class="font-normal text-slate-500">({{ hint }})</span>
-    </label>
+    <InputFieldLabel
+      :for-id="id"
+      :label="label"
+      :hint="hint"
+      :doc-href="docHref"
+      :doc-aria-label="docAriaLabel"
+    />
     <select
       :id="id"
       :value="modelValue"

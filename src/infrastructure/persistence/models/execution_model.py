@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Index, String
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -42,5 +42,7 @@ class ExecutionModel(Base):
         DateTime(timezone=True), nullable=True
     )
     triggered_by_ip: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    workspace_prepare_log: Mapped[str | None] = mapped_column(Text, nullable=True)
+    workspace_prepare_exit_code: Mapped[int | None] = mapped_column(Integer(), nullable=True)
 
     triggered_by_user: Mapped[UserModel] = relationship(back_populates="executions")

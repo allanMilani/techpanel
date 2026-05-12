@@ -23,6 +23,8 @@ class ListServers:
                 created_by=server.created_by,
                 connection_kind=server.connection_kind.value,
                 docker_container_name=server.docker_container_name,
+                ssh_strict_host_key_checking=server.ssh_strict_host_key_checking,
+                project_directory=server.project_directory,
             )
             for server in servers
         ]

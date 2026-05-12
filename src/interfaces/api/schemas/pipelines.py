@@ -6,11 +6,13 @@ from pydantic import BaseModel, Field
 class PipelineCreateRequest(BaseModel):
     name: str
     description: str | None = None
+    run_git_workspace_sync: bool = False
 
 
 class PipelineUpdateRequest(BaseModel):
     name: str
     description: str | None = None
+    run_git_workspace_sync: bool = False
 
 
 class PipelineResponse(BaseModel):
@@ -18,7 +20,10 @@ class PipelineResponse(BaseModel):
     environment_id: UUID
     name: str
     description: str | None = None
+    run_git_workspace_sync: bool = False
     project_id: UUID | None = None
+    repo_github: str | None = None
+    refs_repository_full_name: str | None = None
 
 
 class StepCreateRequest(BaseModel):

@@ -17,6 +17,15 @@ class Execution:
     triggered_by_ip: str | None = None
     started_at: datetime | None = None
     finished_at: datetime | None = None
+    workspace_prepare_log: str | None = None
+    workspace_prepare_exit_code: int | None = None
+
+    def with_workspace_prepare(self, log: str | None, exit_code: int | None) -> "Execution":
+        return replace(
+            self,
+            workspace_prepare_log=log,
+            workspace_prepare_exit_code=exit_code,
+        )
 
     @staticmethod
     def create(
@@ -46,6 +55,8 @@ class Execution:
             status=ExecutionStatus.PENDING,
             created_at=datetime.now(UTC),
             triggered_by_ip=ip,
+            workspace_prepare_log=None,
+            workspace_prepare_exit_code=None,
         )
 
     def mark_running(self) -> "Execution":

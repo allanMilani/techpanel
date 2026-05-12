@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
 class LoginRequest(BaseModel):
@@ -16,11 +16,14 @@ class LoginResponse(BaseModel):
 class MeResponse(BaseModel):
     user_id: str
     role: str
+    display_name: str | None = None
+    has_github_token: bool = False
 
 
 class RegisterRequest(BaseModel):
     email: EmailStr
     password: str
+    name: str | None = Field(default=None, max_length=255)
 
 
 class RegisterResponse(BaseModel):

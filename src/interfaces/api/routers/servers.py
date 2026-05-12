@@ -1,13 +1,14 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from src.application.dtos import CreateServerInputDTO, UpdateServerInputDTO
 from src.application.use_cases.servers.check_ssh_connection import CheckSSHConnection
 from src.application.use_cases.servers.create_server import CreateServer
 from src.application.use_cases.servers.delete_server import DeleteServer
 from src.application.use_cases.servers.list_servers import ListServers
 from src.application.use_cases.servers.update_server import UpdateServer
+from src.domain.ports.repositories import IUserRepository
 from src.interfaces.api.dependencies import (
     CurrentUser,
     get_check_ssh_connection_use_case,
@@ -17,6 +18,7 @@ from src.interfaces.api.dependencies import (
     get_update_server_use_case,
     require_admin,
 )
+from src.interfaces.api.dependencies.core import get_user_repository
 from src.interfaces.api.dependencies.pagination import Pagination, get_pagination
 from src.interfaces.api.schemas import (
     ServerCreateRequest,
@@ -47,6 +49,8 @@ async def list_servers(
                 created_by=str(server.created_by),
                 connection_kind=server.connection_kind,
                 docker_container_name=server.docker_container_name,
+                ssh_strict_host_key_checking=server.ssh_strict_host_key_checking,
+                project_directory=server.project_directory,
             )
             for server in out.items
         ],
@@ -61,8 +65,15 @@ async def list_servers(
 async def create_server(
     payload: ServerCreateRequest,
     current_user: Annotated[CurrentUser, Depends(require_admin)],
+    user_repo: Annotated[IUserRepository, Depends(get_user_repository)],
     use_case: Annotated[CreateServer, Depends(get_create_server_use_case)],
 ) -> ServerResponse:
+    user_id = UUID(current_user.sub)
+    if await user_repo.get_by_id(user_id) is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Sessão inválida: conta não encontrada. Volte a iniciar sessão.",
+        )
     out = await use_case.execute(
         CreateServerInputDTO(
             name=payload.name,
@@ -70,9 +81,11 @@ async def create_server(
             port=payload.port,
             ssh_user=payload.ssh_user,
             private_key_plain=payload.private_key_plain,
-            created_by=UUID(current_user.sub),
+            created_by=user_id,
             connection_kind=payload.connection_kind,
             docker_container_name=payload.docker_container_name,
+            ssh_strict_host_key_checking=payload.ssh_strict_host_key_checking,
+            project_directory=payload.project_directory,
         )
     )
 
@@ -85,6 +98,8 @@ async def create_server(
         created_by=str(out.created_by),
         connection_kind=out.connection_kind,
         docker_container_name=out.docker_container_name,
+        ssh_strict_host_key_checking=out.ssh_strict_host_key_checking,
+        project_directory=out.project_directory,
     )
 
 
@@ -107,6 +122,8 @@ async def update_server(
             private_key_plain=payload.private_key_plain,
             connection_kind=payload.connection_kind,
             docker_container_name=payload.docker_container_name,
+            ssh_strict_host_key_checking=payload.ssh_strict_host_key_checking,
+            project_directory=payload.project_directory,
         ),
     )
 
@@ -119,6 +136,8 @@ async def update_server(
         created_by=str(out.created_by),
         connection_kind=out.connection_kind,
         docker_container_name=out.docker_container_name,
+        ssh_strict_host_key_checking=out.ssh_strict_host_key_checking,
+        project_directory=out.project_directory,
     )
 
 
@@ -142,5 +161,5 @@ async def test_connection(
     _current_user: Annotated[CurrentUser, Depends(require_admin)],
     use_case: Annotated[CheckSSHConnection, Depends(get_check_ssh_connection_use_case)],
 ) -> TestConnectionResponse:
-    ok = await use_case.execute(server_id)
-    return TestConnectionResponse(ok=ok)
+    ok, err_code, err_detail = await use_case.execute(server_id)
+    return TestConnectionResponse(ok=ok, error_code=err_code, error_detail=err_detail)

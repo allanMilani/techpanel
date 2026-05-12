@@ -43,9 +43,16 @@ class UpdateServer:
             )
 
         if kind == ServerConnectionKind.SSH:
-            encrypted_key = (
-                self.key_cipher.encrypt(plain) if plain else existing.private_key_enc
-            )
+            if plain:
+                try:
+                    encrypted_key = self.key_cipher.encrypt(plain)
+                except UnicodeEncodeError as e:
+                    raise ValidationAppError(
+                        "A chave privada contém caracteres inválidos para UTF-8. "
+                        "Cole o PEM em texto puro (ASCII), sem BOM nem caracteres especiais."
+                    ) from e
+            else:
+                encrypted_key = existing.private_key_enc
         elif existing.connection_kind == ServerConnectionKind.LOCAL_DOCKER:
             encrypted_key = existing.private_key_enc
         else:
@@ -74,6 +81,12 @@ class UpdateServer:
             created_by=existing.created_by,
             connection_kind=kind,
             docker_container_name=docker_name,
+            ssh_strict_host_key_checking=(
+                dto.ssh_strict_host_key_checking
+                if kind == ServerConnectionKind.SSH
+                else False
+            ),
+            project_directory=(dto.project_directory or "").strip() or None,
         )
 
         persisted = await self.server_repo.update(updated)
@@ -87,4 +100,6 @@ class UpdateServer:
             created_by=persisted.created_by,
             connection_kind=persisted.connection_kind.value,
             docker_container_name=persisted.docker_container_name,
+            ssh_strict_host_key_checking=persisted.ssh_strict_host_key_checking,
+            project_directory=persisted.project_directory,
         )

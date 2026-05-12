@@ -15,7 +15,9 @@ from src.application.use_cases.executions.cancel_execution import CancelExecutio
 from src.application.use_cases.executions.run_next_step import RunNextStep
 from src.application.use_cases.executions.start_execution import StartExecution
 from src.application.use_cases.pipelines.get_pipeline import GetPipeline
+from src.domain.ports.repositories import IPipelineRepository
 from src.domain.value_objects.execution_status import ExecutionStatus
+from src.interfaces.api.dependencies.core import get_pipeline_repository
 from src.interfaces.api.dependencies import (
     CurrentUser,
     get_cancel_execution_use_case,
@@ -76,16 +78,28 @@ def _step_log_to_response(
     dto: object,
     step_commands: dict[str, str],
 ) -> StepExecutionResponse:
-    pid = str(dto.pipeline_step_id)
+    pid = dto.pipeline_step_id
+    if pid is None:
+        return StepExecutionResponse(
+            id=str(dto.id),
+            execution_id=str(dto.execution_id),
+            pipeline_step_id=None,
+            order=dto.order,
+            status=dto.status,
+            log_output=dto.log_output,
+            exit_code=dto.exit_code,
+            command=None,
+        )
+    ps = str(pid)
     return StepExecutionResponse(
         id=str(dto.id),
         execution_id=str(dto.execution_id),
-        pipeline_step_id=pid,
+        pipeline_step_id=ps,
         order=dto.order,
         status=dto.status,
         log_output=dto.log_output,
         exit_code=dto.exit_code,
-        command=step_commands.get(pid),
+        command=step_commands.get(ps),
     )
 
 
@@ -116,6 +130,7 @@ async def get_execution_panel(
     exec_repo: Annotated[object, Depends(get_execution_repository)],
     logs_uc: Annotated[GetExecutionLogs, Depends(get_get_execution_logs_use_case)],
     get_pipeline_uc: Annotated[GetPipeline, Depends(get_get_pipeline_use_case)],
+    pipeline_repo: Annotated[IPipelineRepository, Depends(get_pipeline_repository)],
 ) -> ExecutionPanelResponse:
     execution = await exec_repo.get_by_id(execution_id)
     if execution is None:
@@ -138,12 +153,22 @@ async def get_execution_panel(
         step_logs_dto = []
     step_logs = [_step_log_to_response(s, step_commands) for s in step_logs_dto]
     terminal = _execution_is_terminal(execution.status.value)
+    pipeline = await pipeline_repo.get_by_id(execution.pipeline_id)
+    prep_skipped = bool(
+        pipeline is not None
+        and not pipeline.run_git_workspace_sync
+        and execution.workspace_prepare_exit_code is not None
+        and execution.workspace_prepare_exit_code == 0
+    )
     return ExecutionPanelResponse(
         error=None,
         execution=_execution_to_response(execution),
         step_logs=step_logs,
         step_labels=step_labels,
         terminal=terminal,
+        workspace_prepare_log=execution.workspace_prepare_log,
+        workspace_prepare_exit_code=execution.workspace_prepare_exit_code,
+        workspace_prepare_skipped=prep_skipped,
     )
 
 

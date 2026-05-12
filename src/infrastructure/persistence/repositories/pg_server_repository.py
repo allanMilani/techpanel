@@ -24,6 +24,8 @@ class PgServerRepository(IServerRepository):
             ssh_user=server.ssh_user,
             connection_kind=server.connection_kind.value,
             docker_container_name=server.docker_container_name,
+            ssh_strict_host_key_checking=server.ssh_strict_host_key_checking,
+            project_directory=server.project_directory,
             private_key_enc=server.private_key_enc,
             created_by=server.created_by,
         )
@@ -46,6 +48,8 @@ class PgServerRepository(IServerRepository):
         row.ssh_user = server.ssh_user
         row.connection_kind = server.connection_kind.value
         row.docker_container_name = server.docker_container_name
+        row.ssh_strict_host_key_checking = server.ssh_strict_host_key_checking
+        row.project_directory = server.project_directory
         row.private_key_enc = server.private_key_enc
         row.created_by = server.created_by
 

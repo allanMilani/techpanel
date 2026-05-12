@@ -21,3 +21,13 @@ class IGitHubService(ABC):
     async def ref_exists(
         self, repository: str, ref_name: str, access_token: str
     ) -> bool: ...
+
+    @abstractmethod
+    async def search_repositories(
+        self, access_token: str, query: str, page: int, per_page: int
+    ) -> tuple[list[str], int]: ...
+
+    @abstractmethod
+    async def search_refs(
+        self, access_token: str, repository: str, query: str, limit: int
+    ) -> tuple[list[str], list[str]]: ...

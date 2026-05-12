@@ -23,8 +23,9 @@ class UpdatePipeline:
         updated = Pipeline(
             id=pipeline.id,
             environment_id=pipeline.environment_id,
-            name=dto.name.strip().lower(),
+            name=dto.name.strip(),
             description=dto.description,
+            run_git_workspace_sync=dto.run_git_workspace_sync,
             steps=pipeline.steps,
         )
 

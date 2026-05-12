@@ -19,12 +19,18 @@ class CreateServer:
             raise ValidationAppError("Tipo de conexão inválido.") from e
 
         if kind == ServerConnectionKind.SSH:
-            plain = dto.private_key_plain.strip()
+            plain = (dto.private_key_plain or "").strip()
             if not plain:
                 raise ValidationAppError(
                     "Chave privada é obrigatória para conexão SSH."
                 )
-            encrypted_key = self.key_cipher.encrypt(plain)
+            try:
+                encrypted_key = self.key_cipher.encrypt(plain)
+            except UnicodeEncodeError as e:
+                raise ValidationAppError(
+                    "A chave privada contém caracteres inválidos para UTF-8. "
+                    "Cole o PEM em texto puro (ASCII), sem BOM nem caracteres especiais."
+                ) from e
         else:
             if not (dto.docker_container_name or "").strip():
                 raise ValidationAppError(
@@ -42,6 +48,8 @@ class CreateServer:
                 created_by=dto.created_by,
                 connection_kind=kind,
                 docker_container_name=dto.docker_container_name,
+                ssh_strict_host_key_checking=dto.ssh_strict_host_key_checking,
+                project_directory=dto.project_directory,
             )
         except ValidationError as e:
             raise ValidationAppError(str(e)) from e
@@ -57,4 +65,6 @@ class CreateServer:
             created_by=server.created_by,
             connection_kind=server.connection_kind.value,
             docker_container_name=server.docker_container_name,
+            ssh_strict_host_key_checking=server.ssh_strict_host_key_checking,
+            project_directory=server.project_directory,
         )

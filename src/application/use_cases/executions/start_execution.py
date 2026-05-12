@@ -1,6 +1,7 @@
-from src.application import ActiveExecutionConflictError, NotFoundAppError
+from src.application import ActiveExecutionConflictError, NotFoundAppError, ValidationAppError
 from src.application.dtos import ExecutionOutputDTO, StartExecutionInputDTO
 from src.application.dtos.execution_dto import execution_to_output_dto
+from src.application.utils.git_ref import is_safe_git_ref
 from src.domain.entities import Execution, StepExecution
 from src.domain.ports.repositories import (
     IEnvironmentRepository,
@@ -27,6 +28,9 @@ class StartExecution:
         pipeline = await self.pipeline_repo.get_by_id(dto.pipeline_id)
         if pipeline is None:
             raise NotFoundAppError("Pipeline not found")
+
+        if pipeline.run_git_workspace_sync and not is_safe_git_ref(dto.branch_or_tag):
+            raise ValidationAppError("Branch ou tag inválida para esta pipeline.")
 
         environments = await self.environment_repo.list_by_pipeline(dto.pipeline_id)
         environment = next(

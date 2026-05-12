@@ -23,16 +23,26 @@ class _RegisterConflictUseCase:
         raise ConflictAppError("Email already registered")
 
 
-def test_spa_shell_served_at_root_when_built() -> None:
+def test_spa_shell_served_at_root_when_built(monkeypatch) -> None:
+    monkeypatch.setenv("FRONTEND_DEV_SERVER_URL", "")
+    from src.infrastructure.config.settings import get_settings
+
+    get_settings.cache_clear()
     with TestClient(app) as client:
         response = client.get("/")
+    get_settings.cache_clear()
     assert response.status_code == 200
     assert 'id="app"' in response.text
 
 
-def test_spa_shell_at_app_path() -> None:
+def test_spa_shell_at_app_path(monkeypatch) -> None:
+    monkeypatch.setenv("FRONTEND_DEV_SERVER_URL", "")
+    from src.infrastructure.config.settings import get_settings
+
+    get_settings.cache_clear()
     with TestClient(app) as client:
         response = client.get("/app/pipelines")
+    get_settings.cache_clear()
     assert response.status_code == 200
     assert 'id="app"' in response.text
 

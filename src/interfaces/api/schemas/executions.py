@@ -19,7 +19,7 @@ class ExecutionResponse(BaseModel):
 class StepExecutionResponse(BaseModel):
     id: str
     execution_id: str
-    pipeline_step_id: str
+    pipeline_step_id: str | None = None
     order: int
     status: str
     log_output: str | None
@@ -33,3 +33,6 @@ class ExecutionPanelResponse(BaseModel):
     step_logs: list[StepExecutionResponse]
     step_labels: dict[str, str]
     terminal: bool
+    workspace_prepare_log: str | None = None
+    workspace_prepare_exit_code: int | None = None
+    workspace_prepare_skipped: bool = False

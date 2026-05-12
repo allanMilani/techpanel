@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 
+import AppGithubAutocomplete from '../components/inputs/AppGithubAutocomplete.vue'
 import AppTextField from '../components/inputs/AppTextField.vue'
 import { ApiError, apiJson } from '../composables/useApi'
 import { useToast } from '../composables/useToast'
@@ -67,7 +68,16 @@ async function save() {
     </h1>
     <form class="w-full rounded-lg border border-slate-200 bg-white p-6 shadow-sm" @submit.prevent="save">
       <AppTextField id="name" v-model="name" label="Nome" required />
-      <AppTextField id="repo" v-model="repoGithub" label="Repositório GitHub" required />
+      <AppGithubAutocomplete
+        id="repo"
+        v-model="repoGithub"
+        mode="repo"
+        label="Repositório GitHub"
+        hint="Formato owner/repo. Pesquisa com o PAT configurado em Perfil."
+        required
+        doc-href="/ajuda#github-repo"
+        doc-aria-label="Documentação sobre repositório GitHub"
+      />
       <AppTextField id="stack" v-model="techStack" label="Tech stack" required />
       <button type="submit" class="rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700">
         Salvar

@@ -29,4 +29,6 @@ class Login:
             token_type="Bearer",
             user_id=user.id,
             role=user.role.value,
+            display_name=user.display_name,
+            has_github_token=bool(user.github_token_enc),
         )

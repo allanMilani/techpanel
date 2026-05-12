@@ -32,7 +32,7 @@ class RunNextStepInputDTO:
 class StepExecutionOutputDTO:
     id: UUID
     execution_id: UUID
-    pipeline_step_id: UUID
+    pipeline_step_id: UUID | None
     order: int
     status: str
     log_output: str | None

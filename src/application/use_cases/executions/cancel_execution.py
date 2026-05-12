@@ -2,6 +2,7 @@ from uuid import UUID
 
 from src.application import NotFoundAppError, ValidationAppError
 from src.domain.ports.repositories import IExecutionRepository, IStepExecutionRepository
+from src.domain.ports.services import IDockerExecService, ISSHService
 from src.domain.value_objects.execution_status import ExecutionStatus
 from src.domain.value_objects.step_execution_status import StepExecutionStatus
 
@@ -11,9 +12,13 @@ class CancelExecution:
         self,
         execution_repo: IExecutionRepository,
         step_execution_repo: IStepExecutionRepository,
+        ssh_service: ISSHService,
+        docker_exec: IDockerExecService,
     ) -> None:
         self.execution_repo = execution_repo
         self.step_execution_repo = step_execution_repo
+        self.ssh_service = ssh_service
+        self.docker_exec = docker_exec
 
     async def execute(self, execution_id: UUID) -> None:
         execution = await self.execution_repo.get_by_id(execution_id)
@@ -39,3 +44,5 @@ class CancelExecution:
                 StepExecutionStatus.RUNNING,
             ):
                 await self.step_execution_repo.update(se.mark_skipped(msg))
+        await self.ssh_service.release_pipeline_session(execution_id)
+        await self.docker_exec.release_pipeline_session(execution_id)

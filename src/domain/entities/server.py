@@ -37,6 +37,8 @@ class Server:
     created_by: UUID
     connection_kind: ServerConnectionKind
     docker_container_name: str | None
+    ssh_strict_host_key_checking: bool
+    project_directory: str | None = None
 
     @staticmethod
     def _validate(
@@ -84,6 +86,8 @@ class Server:
         *,
         connection_kind: ServerConnectionKind = ServerConnectionKind.SSH,
         docker_container_name: str | None = None,
+        ssh_strict_host_key_checking: bool = False,
+        project_directory: str | None = None,
     ) -> "Server":
         docker_arg = (
             docker_container_name
@@ -112,6 +116,14 @@ class Server:
         if connection_kind == ServerConnectionKind.LOCAL_DOCKER:
             docker_clean = normalize_docker_container_ref(docker_container_name)
 
+        strict_host = (
+            bool(ssh_strict_host_key_checking)
+            if connection_kind == ServerConnectionKind.SSH
+            else False
+        )
+
+        proj_dir = (project_directory or "").strip() or None
+
         return Server(
             id=uuid4(),
             name=name.strip(),
@@ -122,4 +134,6 @@ class Server:
             created_by=created_uuid,
             connection_kind=connection_kind,
             docker_container_name=docker_clean,
+            ssh_strict_host_key_checking=strict_host,
+            project_directory=proj_dir,
         )

@@ -13,6 +13,7 @@ class CreatePipeline:
             name=dto.name,
             environment_id=str(dto.environment_id),
             description=dto.description,
+            run_git_workspace_sync=dto.run_git_workspace_sync,
         )
         created = await self.pipeline_repo.create(pipeline)
         return pipeline_to_summary_dto(created)

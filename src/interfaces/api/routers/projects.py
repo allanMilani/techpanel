@@ -19,6 +19,7 @@ from src.application.use_cases.projects.list_project_environments import (
 from src.application.use_cases.projects.list_projects import ListProjects
 from src.application.use_cases.projects.update_environment import UpdateEnvironment
 from src.application.use_cases.projects.update_project import UpdateProject
+from src.application.use_cases.environments.server_dotenv import ReadServerDotenv, WriteServerDotenv
 from src.interfaces.api.dependencies import (
     CurrentUser,
     get_create_project,
@@ -30,6 +31,8 @@ from src.interfaces.api.dependencies import (
     get_list_projects,
     get_update_environment,
     get_update_project,
+    get_read_server_dotenv,
+    get_write_server_dotenv,
     require_admin,
 )
 from src.interfaces.api.dependencies.pagination import Pagination, get_pagination
@@ -41,6 +44,9 @@ from src.interfaces.api.schemas.environment_schemas import (
     EnvironmentCreateBody,
     EnvironmentResponse,
     EnvironmentUpdateBody,
+    ServerDotenvPutBody,
+    ServerDotenvPutResponse,
+    ServerDotenvResponse,
 )
 from src.interfaces.api.schemas.project_schemas import (
     ProjectCreateBody,
@@ -204,3 +210,34 @@ async def update_environment(
 
     env = await use_case.execute(project_id, environment_id, dto)
     return _env_to_response(env)
+
+
+@router.get(
+    "/{project_id}/environments/{environment_id}/server-dotenv",
+    response_model=ServerDotenvResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def get_environment_server_dotenv(
+    project_id: UUID,
+    environment_id: UUID,
+    _: Annotated[CurrentUser, Depends(require_admin)],
+    use_case: Annotated[ReadServerDotenv, Depends(get_read_server_dotenv)],
+) -> ServerDotenvResponse:
+    content, exists, path = await use_case.execute(project_id, environment_id)
+    return ServerDotenvResponse(content=content, exists=exists, path=path)
+
+
+@router.put(
+    "/{project_id}/environments/{environment_id}/server-dotenv",
+    response_model=ServerDotenvPutResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def put_environment_server_dotenv(
+    project_id: UUID,
+    environment_id: UUID,
+    payload: ServerDotenvPutBody,
+    _: Annotated[CurrentUser, Depends(require_admin)],
+    use_case: Annotated[WriteServerDotenv, Depends(get_write_server_dotenv)],
+) -> ServerDotenvPutResponse:
+    path = await use_case.execute(project_id, environment_id, payload.content)
+    return ServerDotenvPutResponse(path=path)

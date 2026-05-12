@@ -1,9 +1,18 @@
 from types import SimpleNamespace
 
+import paramiko
 import pytest
 
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
 from src.infrastructure.security.fernet_key_cipher import FernetKeyCipher
-from src.infrastructure.services.paramiko_ssh_service import ParamikoSSHService
+from src.infrastructure.services.paramiko_ssh_service import (
+    ParamikoSSHService,
+    _load_private_key,
+    _remote_exec_command,
+)
+from src.infrastructure.services.shell_command_with_exit_marker import parse_marker_tail
 
 
 def test_fernet_key_cipher_encrypt_decrypt_roundtrip() -> None:
@@ -16,6 +25,29 @@ def test_fernet_key_cipher_encrypt_decrypt_roundtrip() -> None:
 
     assert encrypted != "PRIVATE_KEY_CONTENT"
     assert decrypted == "PRIVATE_KEY_CONTENT"
+
+
+def test_load_private_key_accepts_ed25519_openssh() -> None:
+    key = Ed25519PrivateKey.generate()
+    pem = key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.OpenSSH,
+        encryption_algorithm=serialization.NoEncryption(),
+    )
+    pkey = _load_private_key(pem.decode())
+    assert isinstance(pkey, paramiko.Ed25519Key)
+
+
+def test_load_private_key_accepts_windows_line_endings() -> None:
+    key = Ed25519PrivateKey.generate()
+    pem = key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.OpenSSH,
+        encryption_algorithm=serialization.NoEncryption(),
+    )
+    pem_crlf = pem.decode().replace("\n", "\r\n")
+    pkey = _load_private_key(pem_crlf)
+    assert isinstance(pkey, paramiko.Ed25519Key)
 
 
 @pytest.mark.asyncio
@@ -35,16 +67,12 @@ async def test_paramiko_ssh_service_test_connection(monkeypatch) -> None:
         lambda: FakeClient(),
     )
     monkeypatch.setattr(
-        "src.infrastructure.services.paramiko_ssh_service.paramiko.RejectPolicy",
-        lambda: object(),
-    )
-    monkeypatch.setattr(
-        "src.infrastructure.services.paramiko_ssh_service.paramiko.RSAKey.from_private_key",
-        lambda _stream: object(),
+        "src.infrastructure.services.paramiko_ssh_service._load_private_key",
+        lambda _k, password=None: object(),
     )
 
     svc = ParamikoSSHService()
-    ok = await svc.test_connection(
+    ok, err_code, err_detail = await svc.test_connection(
         host="127.0.0.1",
         port=22,
         username="ubuntu",
@@ -52,6 +80,31 @@ async def test_paramiko_ssh_service_test_connection(monkeypatch) -> None:
     )
 
     assert ok is True
+    assert err_code is None
+    assert err_detail is None
+
+
+def test_remote_exec_command_quotes_cwd_and_wraps_bash() -> None:
+    cmd = _remote_exec_command("echo ok", "/var/www")
+    assert cmd.startswith("bash -lc ")
+    assert "cd /var/www && echo ok" in cmd
+    spaced = _remote_exec_command("ls", "/var/my app")
+    assert "my app" in spaced
+
+
+def test_parse_marker_tail_strips_exit_line_and_normalizes_crlf() -> None:
+    m = "__TP_EXIT_abc__"
+    code, visible = parse_marker_tail(f"line1\r\nline2\r\n{m} 0\r\n", m)
+    assert code == 0
+    assert visible == "line1\nline2"
+
+
+def test_parse_marker_tail_preserves_leading_and_trailing_blank_lines() -> None:
+    m = "__TP_EXIT_xyz__"
+    raw = f"\n\nout\n\n\n{m} 1\n"
+    code, visible = parse_marker_tail(raw, m)
+    assert code == 1
+    assert visible == "\n\nout\n\n"
 
 
 @pytest.mark.asyncio
@@ -86,12 +139,8 @@ async def test_paramiko_ssh_service_execute(monkeypatch) -> None:
         lambda: FakeClient(),
     )
     monkeypatch.setattr(
-        "src.infrastructure.services.paramiko_ssh_service.paramiko.RejectPolicy",
-        lambda: object(),
-    )
-    monkeypatch.setattr(
-        "src.infrastructure.services.paramiko_ssh_service.paramiko.RSAKey.from_private_key",
-        lambda _stream: object(),
+        "src.infrastructure.services.paramiko_ssh_service._load_private_key",
+        lambda _k, password=None: object(),
     )
 
     svc = ParamikoSSHService()

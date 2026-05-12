@@ -36,6 +36,7 @@ async def test_create_server_encrypts_key() -> None:
     )
     assert out.name == "srv"
     assert out.connection_kind == "ssh"
+    assert out.ssh_strict_host_key_checking is False
     stored = await repo.get_by_id(out.id)
     assert stored is not None
     assert stored.private_key_enc.startswith("enc:")
@@ -61,6 +62,7 @@ async def test_create_local_docker_server_uses_placeholder_key() -> None:
     )
     assert out.connection_kind == "local_docker"
     assert out.docker_container_name == "myapp-web-1"
+    assert out.ssh_strict_host_key_checking is False
     stored = await repo.get_by_id(out.id)
     assert stored is not None
     assert stored.connection_kind == ServerConnectionKind.LOCAL_DOCKER
@@ -84,8 +86,10 @@ async def test_check_ssh_connection_success() -> None:
     use_case = CheckSSHConnection(
         repo, FakeSSHService(result=True), cipher, FakeDockerExecService()
     )
-    ok = await use_case.execute(server.id)
+    ok, code, detail = await use_case.execute(server.id)
     assert ok is True
+    assert code is None
+    assert detail is None
 
 
 @pytest.mark.asyncio
@@ -110,8 +114,10 @@ async def test_check_docker_connection_uses_docker_service() -> None:
         cipher,
         FakeDockerExecService(test_ok=True),
     )
-    ok = await use_case.execute(server.id)
+    ok, code, detail = await use_case.execute(server.id)
     assert ok is True
+    assert code is None
+    assert detail is None
 
 
 @pytest.mark.asyncio

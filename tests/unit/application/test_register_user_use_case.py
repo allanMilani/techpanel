@@ -21,6 +21,10 @@ class _MemoryUserRepo:
     async def get_by_email(self, email: str) -> User | None:
         return self.items.get(email)
 
+    async def update(self, user: User) -> User:
+        self.items[user.email] = user
+        return user
+
 
 class _FakePasswordHasher:
     def hash(self, raw_password: str) -> str:
@@ -36,12 +40,17 @@ async def test_register_user_success() -> None:
     use_case = RegisterUser(user_repo=user_repo, password_hasher=_FakePasswordHasher())
 
     out = await use_case.execute(
-        RegisterUserInputDTO(email="  New.User@TechPanel.dev ", password="secret123")
+        RegisterUserInputDTO(
+            email="  New.User@TechPanel.dev ",
+            password="secret123",
+            display_name="  Ana  ",
+        )
     )
 
     assert out.email == "new.user@techpanel.dev"
     assert out.role == UserRole.VIEWER.value
     assert user_repo.items[out.email].password_hash == "hashed::secret123"
+    assert user_repo.items[out.email].display_name == "Ana"
 
 
 @pytest.mark.asyncio

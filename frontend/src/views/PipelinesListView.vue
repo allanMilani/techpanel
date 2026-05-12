@@ -3,10 +3,8 @@ import { onMounted, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
 import AppPaginationBar from '../components/AppPaginationBar.vue'
-import AppTextField from '../components/inputs/AppTextField.vue'
-import { ApiError, apiJson, type Paged, withPagination } from '../composables/useApi'
+import { apiJson, type Paged, withPagination } from '../composables/useApi'
 import { useAuth } from '../composables/useAuth'
-import { useToast } from '../composables/useToast'
 
 interface Pipeline {
   id: string
@@ -22,10 +20,7 @@ const pipelines = ref<Pipeline[]>([])
 const page = ref(1)
 const totalPages = ref(1)
 const total = ref(0)
-const newName = ref('')
-const newDesc = ref('')
 const { isAdmin } = useAuth()
-const { showToast } = useToast()
 
 async function load() {
   const data = await apiJson<Paged<Pipeline>>(
@@ -38,26 +33,6 @@ async function load() {
 
 onMounted(load)
 
-async function createPipeline() {
-  try {
-    await apiJson(`/api/environments/${environmentId}/pipelines`, {
-      method: 'POST',
-      body: JSON.stringify({
-        name: newName.value,
-        description: newDesc.value.trim() || null,
-      }),
-    })
-    newName.value = ''
-    newDesc.value = ''
-    page.value = 1
-    await load()
-    showToast('Pipeline criado.', 'success')
-  } catch (e) {
-    const msg = e instanceof ApiError ? e.detail ?? e.message : 'Não foi possível criar o pipeline.'
-    showToast(msg, 'error')
-  }
-}
-
 function onPageChange(p: number) {
   page.value = p
   load()
@@ -69,24 +44,17 @@ function onPageChange(p: number) {
     <RouterLink to="/projects" class="mb-4 inline-flex text-sm text-sky-600 hover:underline">
       ← Projetos
     </RouterLink>
-    <h1 class="mb-6 text-2xl font-semibold text-slate-800">Pipelines do ambiente</h1>
 
-    <div v-if="isAdmin" class="mb-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-      <h2 class="mb-3 text-lg font-medium">Nova pipeline</h2>
-      <form class="flex flex-wrap items-end gap-3" @submit.prevent="createPipeline">
-        <div class="min-w-[200px] flex-1">
-          <AppTextField id="pname" v-model="newName" label="Nome" required />
-        </div>
-        <div class="min-w-[200px] flex-1">
-          <AppTextField id="pdesc" v-model="newDesc" label="Descrição" />
-        </div>
-        <button
-          type="submit"
-          class="rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700"
-        >
-          Criar
-        </button>
-      </form>
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <h1 class="text-2xl font-semibold text-slate-800">Pipelines do ambiente</h1>
+      <RouterLink
+        v-if="isAdmin"
+        :to="`/environments/${environmentId}/pipelines/new`"
+        class="inline-flex items-center gap-2 rounded-md bg-sky-600 px-3 py-2 text-sm font-medium text-white hover:bg-sky-700"
+      >
+        <font-awesome-icon :icon="['fas', 'plus']" />
+        Nova pipeline
+      </RouterLink>
     </div>
 
     <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
@@ -105,14 +73,25 @@ function onPageChange(p: number) {
               <span class="line-clamp-2">{{ p.description || '—' }}</span>
             </td>
             <td class="px-4 py-3 text-right">
-              <RouterLink
-                :to="`/pipelines/${p.id}#comandos`"
-                class="inline-flex rounded p-2 text-sky-600 hover:bg-sky-50"
-                title="Abrir pipeline"
-                aria-label="Abrir pipeline"
-              >
-                <font-awesome-icon :icon="['fas', 'project-diagram']" />
-              </RouterLink>
+              <div class="flex items-center justify-end gap-1">
+                <RouterLink
+                  :to="`/pipelines/${p.id}#comandos`"
+                  class="inline-flex rounded p-2 text-sky-600 hover:bg-sky-50"
+                  title="Abrir pipeline"
+                  aria-label="Abrir pipeline"
+                >
+                  <font-awesome-icon :icon="['fas', 'project-diagram']" />
+                </RouterLink>
+                <RouterLink
+                  v-if="isAdmin"
+                  :to="`/pipelines/${p.id}/edit`"
+                  class="inline-flex rounded p-2 text-sky-600 hover:bg-sky-50"
+                  title="Editar pipeline"
+                  aria-label="Editar pipeline"
+                >
+                  <font-awesome-icon :icon="['fas', 'pen-to-square']" />
+                </RouterLink>
+              </div>
             </td>
           </tr>
           <tr v-if="!pipelines.length">

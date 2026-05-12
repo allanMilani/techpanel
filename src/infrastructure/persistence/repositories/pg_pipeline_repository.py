@@ -38,6 +38,7 @@ class PgPipelineRepository(IPipelineRepository):
             environment_id=pipeline.environment_id,
             name=pipeline.name,
             description=pipeline.description,
+            run_git_workspace_sync=pipeline.run_git_workspace_sync,
             created_by=created_by,
         )
         self._session.add(row)
@@ -55,6 +56,7 @@ class PgPipelineRepository(IPipelineRepository):
         row.environment_id = pipeline.environment_id
         row.name = pipeline.name
         row.description = pipeline.description
+        row.run_git_workspace_sync = pipeline.run_git_workspace_sync
         await self._session.flush()
 
         steps = await self.list_steps(pipeline.id)
@@ -63,6 +65,7 @@ class PgPipelineRepository(IPipelineRepository):
             environment_id=row.environment_id,
             name=row.name,
             description=row.description,
+            run_git_workspace_sync=row.run_git_workspace_sync,
             steps=tuple(steps),
         )
 

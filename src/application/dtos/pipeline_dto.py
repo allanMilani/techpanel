@@ -11,6 +11,7 @@ class CreatePipelineInputDTO:
     name: str
     description: str | None
     created_by: UUID
+    run_git_workspace_sync: bool = False
 
 
 @dataclass(slots=True, frozen=True)
@@ -31,6 +32,7 @@ class PipelineSummaryDTO:
     environment_id: UUID
     name: str
     description: str | None
+    run_git_workspace_sync: bool = False
 
 
 @dataclass(slots=True, frozen=True)
@@ -56,6 +58,7 @@ class ReorderStepsInputDTO:
 class UpdatePipelineInputDTO:
     name: str
     description: str | None
+    run_git_workspace_sync: bool = False
 
 
 @dataclass(slots=True, frozen=True)
@@ -89,4 +92,5 @@ def pipeline_to_summary_dto(pipeline: Pipeline) -> PipelineSummaryDTO:
         environment_id=pipeline.environment_id,
         name=pipeline.name,
         description=pipeline.description,
+        run_git_workspace_sync=pipeline.run_git_workspace_sync,
     )

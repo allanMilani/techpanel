@@ -3,6 +3,9 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import {
   faArrowLeft,
   faBars,
+  faBook,
+  faCircleInfo,
+  faFileLines,
   faGripVertical,
   faHome,
   faLayerGroup,
@@ -28,6 +31,9 @@ import './style.css'
 library.add(
   faArrowLeft,
   faBars,
+  faBook,
+  faCircleInfo,
+  faFileLines,
   faGripVertical,
   faHome,
   faLayerGroup,

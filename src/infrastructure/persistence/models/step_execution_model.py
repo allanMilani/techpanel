@@ -25,10 +25,10 @@ class StepExecutionModel(Base):
         ForeignKey("executions.id", ondelete="CASCADE"),
         nullable=False,
     )
-    pipeline_step_id: Mapped[uuid.UUID] = mapped_column(
+    pipeline_step_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("pipeline_steps.id", ondelete="RESTRICT"),
-        nullable=False,
+        ForeignKey("pipeline_steps.id", ondelete="SET NULL"),
+        nullable=True,
     )
     order: Mapped[int] = mapped_column(Integer, nullable=False)
     status: Mapped[StepExecutionStatus] = mapped_column(String(32), nullable=False)

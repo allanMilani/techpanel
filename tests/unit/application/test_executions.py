@@ -21,8 +21,11 @@ from src.domain.value_objects.on_failure_policy import OnFailurePolicy
 from src.domain.value_objects.step_execution_status import StepExecutionStatus
 from src.domain.value_objects.step_type import StepType
 from tests.unit.application.fakes import (
+    FakeDockerExecService,
     FakeNotificationService,
     FakeRunnerRegistry,
+    FakeSSHService,
+    FakeWorkspaceGitPrepare,
     MemoryEnvironmentRepo,
     MemoryExecutionRepo,
     MemoryPipelineRepo,
@@ -129,7 +132,9 @@ async def test_cancel_execution_marks_cancelled_and_skips_pending_steps() -> Non
         StartExecutionInputDTO(pipeline_id=p.id, triggered_by=uuid4(), branch_or_tag="main")
     )
 
-    await CancelExecution(exec_repo, step_repo).execute(started.id)
+    await CancelExecution(
+        exec_repo, step_repo, FakeSSHService(), FakeDockerExecService()
+    ).execute(started.id)
 
     final = await exec_repo.get_by_id(started.id)
     assert final is not None
@@ -169,6 +174,9 @@ async def test_run_next_step_returns_when_execution_already_cancelled() -> None:
         step_repo,
         pipe_repo,
         FakeRunnerRegistry(0),
+        FakeWorkspaceGitPrepare(),
+        FakeSSHService(),
+        FakeDockerExecService(),
     ).execute(RunNextStepInputDTO(execution_id=started.id))
 
     final = await exec_repo.get_by_id(started.id)
@@ -199,7 +207,15 @@ async def test_run_next_step_single_successful_step() -> None:
         StartExecutionInputDTO(pipeline_id=p.id, triggered_by=uid, branch_or_tag="main")
     )
 
-    run = RunNextStep(exec_repo, step_repo, pipe_repo, FakeRunnerRegistry(0))
+    run = RunNextStep(
+        exec_repo,
+        step_repo,
+        pipe_repo,
+        FakeRunnerRegistry(0),
+        FakeWorkspaceGitPrepare(),
+        FakeSSHService(),
+        FakeDockerExecService(),
+    )
     final = await run_next_step_until_terminal(exec_repo, run, started.id)
 
     assert final is not None
@@ -238,6 +254,9 @@ async def test_run_next_step_notify_and_stop_requires_service() -> None:
         step_repo,
         pipe_repo,
         FakeRunnerRegistry(exit_code=1),
+        FakeWorkspaceGitPrepare(),
+        FakeSSHService(),
+        FakeDockerExecService(),
         notification_service=None,
     )
     with pytest.raises(ValidationAppError):
@@ -273,6 +292,9 @@ async def test_run_next_step_notify_and_stop_with_service() -> None:
         step_repo,
         pipe_repo,
         FakeRunnerRegistry(exit_code=1),
+        FakeWorkspaceGitPrepare(),
+        FakeSSHService(),
+        FakeDockerExecService(),
         notification_service=notifier,
     )
     await run.execute(RunNextStepInputDTO(execution_id=started.id))
@@ -356,7 +378,9 @@ async def test_get_history_orders_newest_first() -> None:
     first = await StartExecution(pipe_repo, env_repo, exec_repo, step_repo).execute(
         StartExecutionInputDTO(pipeline_id=p.id, triggered_by=uuid4(), branch_or_tag="main")
     )
-    await CancelExecution(exec_repo, step_repo).execute(first.id)
+    await CancelExecution(
+        exec_repo, step_repo, FakeSSHService(), FakeDockerExecService()
+    ).execute(first.id)
     await asyncio.sleep(0.05)
     second = await StartExecution(pipe_repo, env_repo, exec_repo, step_repo).execute(
         StartExecutionInputDTO(pipeline_id=p.id, triggered_by=uuid4(), branch_or_tag="develop")
@@ -364,6 +388,139 @@ async def test_get_history_orders_newest_first() -> None:
 
     out = await GetHistory(exec_repo).execute(p.id, page=1, per_page=20)
     assert [x.id for x in out.items] == [second.id, first.id]
+
+
+@pytest.mark.asyncio
+async def test_start_execution_rejects_invalid_branch_when_git_sync_enabled() -> None:
+    env_id = uuid4()
+    p = Pipeline.create("Deploy", str(env_id), run_git_workspace_sync=True)
+    s1 = PipelineStep.create(
+        str(p.id),
+        1,
+        "one",
+        StepType.SSH_COMMAND,
+        "echo",
+        OnFailurePolicy.STOP,
+    )
+    pipe_repo = MemoryPipelineRepo(p, [s1])
+    exec_repo = MemoryExecutionRepo()
+    step_repo = MemoryStepExecutionRepo()
+    env_repo = await _build_environment_repo_for_pipeline(p)
+    use_case = StartExecution(pipe_repo, env_repo, exec_repo, step_repo)
+    with pytest.raises(ValidationAppError):
+        await use_case.execute(
+            StartExecutionInputDTO(
+                pipeline_id=p.id,
+                triggered_by=uuid4(),
+                branch_or_tag="bad;ref",
+            )
+        )
+
+
+@pytest.mark.asyncio
+async def test_run_next_step_does_not_invoke_workspace_git_when_disabled() -> None:
+    env_id = uuid4()
+    p = Pipeline.create("Deploy", str(env_id))
+    s1 = PipelineStep.create(
+        str(p.id),
+        1,
+        "one",
+        StepType.SSH_COMMAND,
+        "echo",
+        OnFailurePolicy.STOP,
+    )
+    pipe_repo = MemoryPipelineRepo(p, [s1])
+    exec_repo = MemoryExecutionRepo()
+    step_repo = MemoryStepExecutionRepo()
+    env_repo = await _build_environment_repo_for_pipeline(p)
+    started = await StartExecution(pipe_repo, env_repo, exec_repo, step_repo).execute(
+        StartExecutionInputDTO(pipeline_id=p.id, triggered_by=uuid4(), branch_or_tag="main")
+    )
+    fake_prep = FakeWorkspaceGitPrepare()
+    run = RunNextStep(
+        exec_repo,
+        step_repo,
+        pipe_repo,
+        FakeRunnerRegistry(0),
+        fake_prep,
+        FakeSSHService(),
+        FakeDockerExecService(),
+    )
+    await run_next_step_until_terminal(exec_repo, run, started.id)
+    assert fake_prep.calls == []
+    final = await exec_repo.get_by_id(started.id)
+    assert final is not None
+    assert final.workspace_prepare_exit_code == 0
+
+
+@pytest.mark.asyncio
+async def test_run_next_step_invokes_workspace_git_when_enabled() -> None:
+    env_id = uuid4()
+    p = Pipeline.create("Deploy", str(env_id), run_git_workspace_sync=True)
+    s1 = PipelineStep.create(
+        str(p.id),
+        1,
+        "one",
+        StepType.SSH_COMMAND,
+        "echo",
+        OnFailurePolicy.STOP,
+    )
+    pipe_repo = MemoryPipelineRepo(p, [s1])
+    exec_repo = MemoryExecutionRepo()
+    step_repo = MemoryStepExecutionRepo()
+    env_repo = await _build_environment_repo_for_pipeline(p)
+    started = await StartExecution(pipe_repo, env_repo, exec_repo, step_repo).execute(
+        StartExecutionInputDTO(pipeline_id=p.id, triggered_by=uuid4(), branch_or_tag="main")
+    )
+    fake_prep = FakeWorkspaceGitPrepare()
+    run = RunNextStep(
+        exec_repo,
+        step_repo,
+        pipe_repo,
+        FakeRunnerRegistry(0),
+        fake_prep,
+        FakeSSHService(),
+        FakeDockerExecService(),
+    )
+    await run_next_step_until_terminal(exec_repo, run, started.id)
+    assert fake_prep.calls == [(p.id, "main")]
+
+
+@pytest.mark.asyncio
+async def test_run_next_step_fails_execution_when_workspace_git_fails() -> None:
+    env_id = uuid4()
+    p = Pipeline.create("Deploy", str(env_id), run_git_workspace_sync=True)
+    s1 = PipelineStep.create(
+        str(p.id),
+        1,
+        "one",
+        StepType.SSH_COMMAND,
+        "echo",
+        OnFailurePolicy.STOP,
+    )
+    pipe_repo = MemoryPipelineRepo(p, [s1])
+    exec_repo = MemoryExecutionRepo()
+    step_repo = MemoryStepExecutionRepo()
+    env_repo = await _build_environment_repo_for_pipeline(p)
+    started = await StartExecution(pipe_repo, env_repo, exec_repo, step_repo).execute(
+        StartExecutionInputDTO(pipeline_id=p.id, triggered_by=uuid4(), branch_or_tag="main")
+    )
+    run = RunNextStep(
+        exec_repo,
+        step_repo,
+        pipe_repo,
+        FakeRunnerRegistry(0),
+        FakeWorkspaceGitPrepare(result=(1, "git failed")),
+        FakeSSHService(),
+        FakeDockerExecService(),
+    )
+    await run.execute(RunNextStepInputDTO(execution_id=started.id))
+    final = await exec_repo.get_by_id(started.id)
+    assert final is not None
+    assert final.status == ExecutionStatus.FAILED
+    assert final.workspace_prepare_exit_code == 1
+    step_execs = await step_repo.list_by_execution(started.id)
+    assert all(s.status == StepExecutionStatus.SKIPPED for s in step_execs)
 
 
 @pytest.mark.asyncio

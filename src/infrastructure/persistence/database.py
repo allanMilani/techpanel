@@ -1,5 +1,6 @@
 from collections.abc import AsyncIterator
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -7,6 +8,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
+from src.application import ConflictAppError
 from src.infrastructure.config.settings import get_settings
 
 _engine: AsyncEngine | None = None
@@ -42,6 +44,12 @@ async def get_db_session() -> AsyncIterator[AsyncSession]:
         try:
             yield session
             await session.commit()
+        except IntegrityError as e:
+            await session.rollback()
+            raise ConflictAppError(
+                "Operação rejeitada: referência inválida ou recurso em uso "
+                "(ex.: sessão aponta para uma conta que já não existe — volte a iniciar sessão)."
+            ) from e
         except Exception:
             await session.rollback()
             raise

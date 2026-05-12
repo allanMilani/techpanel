@@ -16,5 +16,6 @@ def pipeline_model_to_entity(row: PipelineModel, steps: list) -> Pipeline:
         environment_id=row.environment_id,
         name=row.name,
         description=row.description,
+        run_git_workspace_sync=bool(getattr(row, "run_git_workspace_sync", False)),
         steps=step_entities,
     )

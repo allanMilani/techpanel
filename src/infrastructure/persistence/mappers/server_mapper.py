@@ -21,4 +21,8 @@ def server_model_to_entity(row: ServerModel) -> Server:
         created_by=row.created_by,
         connection_kind=kind,
         docker_container_name=getattr(row, "docker_container_name", None),
+        ssh_strict_host_key_checking=bool(
+            getattr(row, "ssh_strict_host_key_checking", False)
+        ),
+        project_directory=getattr(row, "project_directory", None),
     )

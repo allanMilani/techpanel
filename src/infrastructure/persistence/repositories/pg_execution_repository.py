@@ -40,6 +40,8 @@ class PgExecutionRepository(IExecutionRepository):
             triggered_by_ip=execution.triggered_by_ip,
             started_at=execution.started_at,
             finished_at=execution.finished_at,
+            workspace_prepare_log=execution.workspace_prepare_log,
+            workspace_prepare_exit_code=execution.workspace_prepare_exit_code,
         )
         self._session.add(row)
         await self._session.flush()
@@ -60,6 +62,8 @@ class PgExecutionRepository(IExecutionRepository):
         row.triggered_by_ip = execution.triggered_by_ip
         row.started_at = execution.started_at
         row.finished_at = execution.finished_at
+        row.workspace_prepare_log = execution.workspace_prepare_log
+        row.workspace_prepare_exit_code = execution.workspace_prepare_exit_code
         await self._session.flush()
         return execution_model_to_entity(row)
 

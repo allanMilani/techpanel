@@ -16,6 +16,7 @@ def test_should_create_server_successfully() -> None:
     )
     assert server.port == 22
     assert server.connection_kind == ServerConnectionKind.SSH
+    assert server.ssh_strict_host_key_checking is False
 
 
 def test_should_create_local_docker_server() -> None:
@@ -30,6 +31,7 @@ def test_should_create_local_docker_server() -> None:
         docker_container_name="app_web_1",
     )
     assert server.docker_container_name == "app_web_1"
+    assert server.ssh_strict_host_key_checking is False
 
 
 def test_should_normalize_leading_slash_in_docker_container_name() -> None:
@@ -60,6 +62,34 @@ def test_should_create_local_docker_with_short_container_id() -> None:
         docker_container_name=cid,
     )
     assert server.docker_container_name == cid
+
+
+def test_should_create_ssh_server_with_strict_host_key() -> None:
+    server = Server.create(
+        name="srv",
+        host="127.0.0.1",
+        port=22,
+        ssh_user="deploy",
+        private_key_enc="encrypted-key",
+        created_by="00000000-0000-0000-0000-000000000001",
+        ssh_strict_host_key_checking=True,
+    )
+    assert server.ssh_strict_host_key_checking is True
+
+
+def test_should_force_strict_host_false_for_local_docker() -> None:
+    server = Server.create(
+        name="dev",
+        host="127.0.0.1",
+        port=22,
+        ssh_user="",
+        private_key_enc="enc:any",
+        created_by="00000000-0000-0000-0000-000000000001",
+        connection_kind=ServerConnectionKind.LOCAL_DOCKER,
+        docker_container_name="c1",
+        ssh_strict_host_key_checking=True,
+    )
+    assert server.ssh_strict_host_key_checking is False
 
 
 def test_should_raise_validation_error_if_port_is_invalid() -> None:

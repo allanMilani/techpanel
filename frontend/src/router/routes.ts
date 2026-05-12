@@ -2,14 +2,18 @@ import type { RouteRecordRaw } from 'vue-router'
 
 import DashboardView from '../views/DashboardView.vue'
 import EnvironmentFormView from '../views/EnvironmentFormView.vue'
+import EnvironmentServerDotenvView from '../views/EnvironmentServerDotenvView.vue'
 import EnvironmentsHubView from '../views/EnvironmentsHubView.vue'
+import HelpView from '../views/HelpView.vue'
 import EnvironmentsListView from '../views/EnvironmentsListView.vue'
 import ExecutionMonitorView from '../views/ExecutionMonitorView.vue'
 import LoginView from '../views/LoginView.vue'
 import MainLayout from '../layouts/MainLayout.vue'
 import PipelineDetailView from '../views/PipelineDetailView.vue'
+import PipelineFormView from '../views/PipelineFormView.vue'
 import PipelinesListView from '../views/PipelinesListView.vue'
 import PipelineRunView from '../views/PipelineRunView.vue'
+import ProfileView from '../views/ProfileView.vue'
 import ProjectFormView from '../views/ProjectFormView.vue'
 import ProjectsListView from '../views/ProjectsListView.vue'
 import RedirectRootView from '../views/RedirectRootView.vue'
@@ -38,6 +42,8 @@ export const routes: RouteRecordRaw[] = [
     children: [
       { path: '', name: 'root', component: RedirectRootView },
       { path: 'dashboard', name: 'dashboard', component: DashboardView },
+      { path: 'ajuda', name: 'help', component: HelpView },
+      { path: 'profile', name: 'profile', component: ProfileView },
       {
         path: 'servers',
         name: 'servers',
@@ -80,9 +86,27 @@ export const routes: RouteRecordRaw[] = [
         component: EnvironmentsListView,
       },
       {
+        path: 'projects/:projectId/environments/new',
+        name: 'environments-new',
+        component: EnvironmentFormView,
+        meta: { requiresAdmin: true },
+      },
+      {
         path: 'projects/:projectId/environments/:environmentId/edit',
         name: 'environments-edit',
         component: EnvironmentFormView,
+        meta: { requiresAdmin: true },
+      },
+      {
+        path: 'projects/:projectId/environments/:environmentId/server-dotenv',
+        name: 'environment-server-dotenv',
+        component: EnvironmentServerDotenvView,
+        meta: { requiresAdmin: true },
+      },
+      {
+        path: 'environments/:environmentId/pipelines/new',
+        name: 'pipelines-new',
+        component: PipelineFormView,
         meta: { requiresAdmin: true },
       },
       {
@@ -91,15 +115,27 @@ export const routes: RouteRecordRaw[] = [
         component: PipelinesListView,
       },
       {
-        path: 'pipelines/:pipelineId',
-        name: 'pipeline-detail',
-        component: PipelineDetailView,
+        path: 'pipelines/:pipelineId/edit',
+        name: 'pipelines-edit',
+        component: PipelineFormView,
+        meta: { requiresAdmin: true },
+      },
+      {
+        path: 'pipelines/:pipelineId/steps/new',
+        name: 'pipeline-step-new',
+        component: StepFormView,
+        meta: { requiresAdmin: true },
       },
       {
         path: 'pipelines/:pipelineId/steps/:stepId/edit',
         name: 'pipeline-step-edit',
         component: StepFormView,
         meta: { requiresAdmin: true },
+      },
+      {
+        path: 'pipelines/:pipelineId',
+        name: 'pipeline-detail',
+        component: PipelineDetailView,
       },
       {
         path: 'pipelines/:pipelineId/run',

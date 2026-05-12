@@ -1,9 +1,14 @@
 import httpx
+from uuid import UUID
+
 from src.domain.entities.pipeline_step import PipelineStep
 
 
 class HttpHealthcheckRunner:
-    async def run(self, step: PipelineStep) -> tuple[int, str]:
+    async def run(
+        self, step: PipelineStep, *, execution_id: UUID | None = None
+    ) -> tuple[int, str]:
+        _ = execution_id
         url = step.command.strip()
         async with httpx.AsyncClient(timeout=step.timeout_seconds) as client:
             response = await client.get(url)

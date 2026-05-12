@@ -3,12 +3,8 @@ import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
 import AppPaginationBar from '../components/AppPaginationBar.vue'
-import AppSelect from '../components/inputs/AppSelect.vue'
-import AppTextField from '../components/inputs/AppTextField.vue'
-import { ENVIRONMENT_TYPES } from '../constants/formOptions'
-import { ApiError, apiJson, fetchAllPaged, type Paged, withPagination } from '../composables/useApi'
+import { apiJson, type Paged, withPagination } from '../composables/useApi'
 import { useAuth } from '../composables/useAuth'
-import { useToast } from '../composables/useToast'
 
 interface Project {
   id: string
@@ -25,11 +21,6 @@ interface Environment {
   is_active: boolean
 }
 
-interface Server {
-  id: string
-  name: string
-}
-
 const route = useRoute()
 const projectId = computed(() => route.params.projectId as string)
 
@@ -38,19 +29,7 @@ const environments = ref<Environment[]>([])
 const page = ref(1)
 const totalPages = ref(1)
 const total = ref(0)
-const servers = ref<Server[]>([])
 const { isAdmin } = useAuth()
-
-const envName = ref('')
-const envType = ref('staging')
-const serverId = ref('')
-const workDir = ref('')
-const { showToast } = useToast()
-
-const envTypeOptions = ENVIRONMENT_TYPES.map((t) => ({ value: t, label: t }))
-const serverOptions = computed(() =>
-  servers.value.map((s) => ({ value: s.id, label: `${s.name} (${s.id})` })),
-)
 
 async function loadEnvironments() {
   const data = await apiJson<Paged<Environment>>(
@@ -63,37 +42,9 @@ async function loadEnvironments() {
 
 onMounted(async () => {
   project.value = await apiJson<Project>(`/api/projects/${projectId.value}`)
-  if (isAdmin.value) {
-    servers.value = await fetchAllPaged<Server>('/api/servers/')
-    if (servers.value.length && !serverId.value) {
-      serverId.value = servers.value[0].id
-    }
-  }
   page.value = 1
   await loadEnvironments()
 })
-
-async function createEnv() {
-  try {
-    await apiJson(`/api/projects/${projectId.value}/environments`, {
-      method: 'POST',
-      body: JSON.stringify({
-        name: envName.value,
-        environment_type: envType.value,
-        server_id: serverId.value,
-        working_directory: workDir.value,
-      }),
-    })
-    envName.value = ''
-    workDir.value = ''
-    page.value = 1
-    await loadEnvironments()
-    showToast('Ambiente criado.', 'success')
-  } catch (e) {
-    const msg = e instanceof ApiError ? e.detail ?? e.message : 'Erro ao criar o ambiente.'
-    showToast(msg, 'error')
-  }
-}
 
 function onPageChange(p: number) {
   page.value = p
@@ -110,41 +61,22 @@ function onPageChange(p: number) {
       <font-awesome-icon :icon="['fas', 'arrow-left']" />
       Projetos
     </RouterLink>
-    <h1 class="mb-2 text-2xl font-semibold text-slate-800">Ambientes</h1>
-    <p v-if="project" class="mb-6 text-slate-600">Projeto: <strong>{{ project.name }}</strong></p>
 
-    <div
-      v-if="isAdmin"
-      class="mb-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm"
-    >
-      <h2 class="mb-4 text-lg font-medium">Novo ambiente</h2>
-      <form class="grid gap-4 md:grid-cols-2" @submit.prevent="createEnv">
-        <AppTextField id="ename" v-model="envName" label="Nome" required />
-        <AppSelect
-          id="etype"
-          v-model="envType"
-          label="Tipo"
-          :options="envTypeOptions"
-          required
-        />
-        <AppSelect
-          v-if="servers.length"
-          id="srv"
-          v-model="serverId"
-          label="Servidor"
-          :options="serverOptions"
-          required
-        />
-        <AppTextField id="wd" v-model="workDir" label="Diretório de trabalho" required />
-        <div class="md:col-span-2">
-          <button
-            type="submit"
-            class="rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700"
-          >
-            Criar ambiente
-          </button>
-        </div>
-      </form>
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <div class="min-w-0">
+        <h1 class="text-2xl font-semibold text-slate-800">Ambientes</h1>
+        <p v-if="project" class="mt-1 text-sm text-slate-600">
+          Projeto: <strong>{{ project.name }}</strong>
+        </p>
+      </div>
+      <RouterLink
+        v-if="isAdmin"
+        :to="`/projects/${projectId}/environments/new`"
+        class="inline-flex items-center gap-2 rounded-md bg-sky-600 px-3 py-2 text-sm font-medium text-white hover:bg-sky-700"
+      >
+        <font-awesome-icon :icon="['fas', 'plus']" />
+        Novo ambiente
+      </RouterLink>
     </div>
 
     <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
@@ -171,6 +103,15 @@ function onPageChange(p: number) {
                   aria-label="Ver pipelines do ambiente"
                 >
                   <font-awesome-icon :icon="['fas', 'project-diagram']" />
+                </RouterLink>
+                <RouterLink
+                  v-if="isAdmin"
+                  :to="`/projects/${projectId}/environments/${e.id}/server-dotenv`"
+                  class="inline-flex rounded p-2 text-amber-700 hover:bg-amber-50"
+                  title=".env no servidor"
+                  aria-label="Editar ficheiro .env no servidor"
+                >
+                  <font-awesome-icon :icon="['fas', 'file-lines']" />
                 </RouterLink>
                 <RouterLink
                   v-if="isAdmin"

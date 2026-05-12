@@ -10,7 +10,7 @@ from src.domain.value_objects.step_execution_status import StepExecutionStatus
 class StepExecution:
     id: UUID
     execution_id: UUID
-    pipeline_step_id: UUID
+    pipeline_step_id: UUID | None
     order: int
     status: StepExecutionStatus
     log_output: str | None = None

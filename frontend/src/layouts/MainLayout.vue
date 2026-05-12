@@ -3,7 +3,7 @@ import { RouterLink, RouterView } from 'vue-router'
 
 import { useAuth } from '../composables/useAuth'
 
-const { isAdmin, logout, role } = useAuth()
+const { isAdmin, logout, role, me } = useAuth()
 
 async function onLogout() {
   await logout()
@@ -51,9 +51,28 @@ async function onLogout() {
               <font-awesome-icon :icon="['fas', 'layer-group']" class="mr-1" />
               Ambientes
             </RouterLink>
+            <RouterLink
+              to="/profile"
+              class="rounded px-2 py-1 text-slate-200 hover:bg-slate-800 hover:text-white"
+              active-class="!bg-slate-800 !text-white"
+            >
+              <font-awesome-icon :icon="['fas', 'user']" class="mr-1" />
+              Perfil
+            </RouterLink>
+            <RouterLink
+              to="/ajuda"
+              class="rounded px-2 py-1 text-slate-200 hover:bg-slate-800 hover:text-white"
+              active-class="!bg-slate-800 !text-white"
+            >
+              <font-awesome-icon :icon="['fas', 'book']" class="mr-1" />
+              Ajuda
+            </RouterLink>
           </nav>
         </div>
         <div class="flex items-center gap-3 text-sm">
+          <span class="max-w-[10rem] truncate text-slate-300" :title="me?.display_name ?? undefined">
+            {{ me?.display_name?.trim() || 'Conta' }}
+          </span>
           <span class="text-slate-400">Papel: {{ role }}</span>
           <button
             type="button"

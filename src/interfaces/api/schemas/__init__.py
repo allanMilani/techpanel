@@ -16,6 +16,9 @@ from src.interfaces.api.schemas.environment_schemas import (
     EnvironmentCreateBody,
     EnvironmentResponse,
     EnvironmentUpdateBody,
+    ServerDotenvPutBody,
+    ServerDotenvPutResponse,
+    ServerDotenvResponse,
 )
 from src.interfaces.api.schemas.project_schemas import (
     ProjectCreateBody,
@@ -65,6 +68,9 @@ __all__ = [
     "EnvironmentCreateBody",
     "EnvironmentUpdateBody",
     "EnvironmentResponse",
+    "ServerDotenvResponse",
+    "ServerDotenvPutBody",
+    "ServerDotenvPutResponse",
     "ErrorResponse",
     "PipelineCreateRequest",
     "PipelineResponse",

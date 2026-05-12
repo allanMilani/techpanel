@@ -3,10 +3,6 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
 import AppPaginationBar from '../components/AppPaginationBar.vue'
-import AppSelect from '../components/inputs/AppSelect.vue'
-import AppTextField from '../components/inputs/AppTextField.vue'
-import AppTextarea from '../components/inputs/AppTextarea.vue'
-import { ON_FAILURE_POLICIES, STEP_TYPES } from '../constants/formOptions'
 import { ApiError, apiJson, apiJsonNoBody, fetchAllPaged, type Paged, withPagination } from '../composables/useApi'
 import { useAuth } from '../composables/useAuth'
 import { useConfirm } from '../composables/useConfirm'
@@ -18,6 +14,7 @@ interface PipelineSummary {
   name: string
   description: string | null
   project_id: string | null
+  repo_github?: string | null
 }
 
 interface Step {
@@ -50,22 +47,12 @@ const historyPage = ref(1)
 const historyTotalPages = ref(1)
 const historyTotal = ref(0)
 
-const sName = ref('')
-const stepType = ref('ssh_command')
-const command = ref('')
-const onFailure = ref('stop')
-const timeoutSeconds = ref('300')
-const workingDir = ref('')
-
 const dragStepId = ref<string | null>(null)
 const cancellingHistoryExecutionId = ref<string | null>(null)
 
 const { isAdmin } = useAuth()
 const { requestConfirm } = useConfirm()
 const { showToast } = useToast()
-
-const stepTypeOptions = STEP_TYPES.map((t) => ({ value: t, label: t }))
-const onFailOptions = ON_FAILURE_POLICIES.map((t) => ({ value: t, label: t }))
 
 const projectId = computed(() => summary.value?.project_id ?? '')
 
@@ -74,22 +61,6 @@ function formatExecutionDateTime(iso: string): string {
   if (d.toString() === 'Invalid Date') return iso
   return d.toLocaleString('pt-BR', { hour12: false })
 }
-
-const commandFieldLabel = computed(() => {
-  if (stepType.value === 'ssh_command') return 'Comando SSH'
-  if (stepType.value === 'http_healthcheck') return 'URL do health check'
-  if (stepType.value === 'notify_webhook') return 'URL do webhook'
-  return 'Comando'
-})
-
-const commandFieldHint = computed(() => {
-  if (stepType.value === 'ssh_command') {
-    return 'executado no servidor do ambiente; ex.: cd /var/www/app && git pull'
-  }
-  if (stepType.value === 'http_healthcheck') return 'ex.: https://api.exemplo.com/health'
-  if (stepType.value === 'notify_webhook') return 'POST será enviado para esta URL'
-  return undefined
-})
 
 async function loadStepsAll() {
   const id = pipelineId.value
@@ -147,29 +118,6 @@ watch(
     if (summary.value) scrollToRouteHash()
   },
 )
-
-async function addStep() {
-  try {
-    await apiJson(`/api/pipelines/${pipelineId.value}/steps`, {
-      method: 'POST',
-      body: JSON.stringify({
-        name: sName.value,
-        step_type: stepType.value,
-        command: command.value,
-        on_failure: onFailure.value,
-        timeout_seconds: Number.parseInt(timeoutSeconds.value, 10),
-        working_directory: workingDir.value.trim() || null,
-      }),
-    })
-    sName.value = ''
-    command.value = ''
-    await load()
-    showToast('Passo adicionado.', 'success')
-  } catch (e) {
-    const msg = e instanceof ApiError ? e.detail ?? e.message : 'Não foi possível adicionar o passo.'
-    showToast(msg, 'error')
-  }
-}
 
 function onStepDragStart(e: DragEvent, stepId: string) {
   dragStepId.value = stepId
@@ -283,6 +231,22 @@ async function cancelExecutionFromHistory(executionId: string) {
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <RouterLink
+          v-if="isAdmin"
+          :to="`/pipelines/${pipelineId}/edit`"
+          class="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50"
+        >
+          <font-awesome-icon :icon="['fas', 'pen-to-square']" />
+          Editar pipeline
+        </RouterLink>
+        <RouterLink
+          v-if="isAdmin"
+          :to="`/pipelines/${pipelineId}/steps/new`"
+          class="inline-flex items-center gap-2 rounded-md bg-sky-600 px-3 py-2 text-sm font-medium text-white hover:bg-sky-700"
+        >
+          <font-awesome-icon :icon="['fas', 'plus']" />
+          Novo passo
+        </RouterLink>
+        <RouterLink
           :to="`/pipelines/${pipelineId}/run`"
           class="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700"
         >
@@ -293,30 +257,6 @@ async function cancelExecutionFromHistory(executionId: string) {
     </div>
 
     <div id="pipeline-comandos" class="scroll-mt-24 space-y-6">
-      <div v-if="isAdmin" class="w-full rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 class="mb-4 text-lg font-medium text-slate-800">Adicionar passo</h2>
-        <form class="space-y-3 text-sm" @submit.prevent="addStep">
-          <AppTextField id="sn" v-model="sName" label="Nome" required />
-          <AppSelect id="st" v-model="stepType" label="Tipo" :options="stepTypeOptions" required />
-          <AppTextarea
-            id="cmd"
-            v-model="command"
-            :label="commandFieldLabel"
-            :hint="commandFieldHint"
-            :rows="stepType === 'ssh_command' ? 4 : 3"
-            required
-          />
-          <div class="grid gap-3 sm:grid-cols-2">
-            <AppSelect id="of" v-model="onFailure" label="Em falha" :options="onFailOptions" required />
-            <AppTextField id="to" v-model="timeoutSeconds" label="Timeout (s)" type="number" required />
-          </div>
-          <AppTextField id="wd" v-model="workingDir" label="Working dir (opcional)" />
-          <button type="submit" class="rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700">
-            Adicionar passo
-          </button>
-        </form>
-      </div>
-
       <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
         <div class="border-b border-slate-100 px-4 py-2 text-sm font-medium text-slate-800">
           Passos

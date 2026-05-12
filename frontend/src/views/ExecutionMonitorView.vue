@@ -17,7 +17,7 @@ interface Execution {
 
 interface StepLog {
   id: string
-  pipeline_step_id: string
+  pipeline_step_id: string | null
   order: number
   status: string
   log_output: string | null
@@ -31,6 +31,9 @@ interface Panel {
   step_logs: StepLog[]
   step_labels: Record<string, string>
   terminal: boolean
+  workspace_prepare_log?: string | null
+  workspace_prepare_exit_code?: number | null
+  workspace_prepare_skipped?: boolean
 }
 
 const route = useRoute()
@@ -58,8 +61,15 @@ const sortedStepLogs = computed(() => {
   return [...logs].sort((a, b) => a.order - b.order)
 })
 
+const workspaceSkipped = computed(() => Boolean(panel.value?.workspace_prepare_skipped))
+const workspaceExit = computed(() => panel.value?.workspace_prepare_exit_code ?? null)
+const workspaceLog = computed(() => panel.value?.workspace_prepare_log?.trim() ?? '')
+
 function stepTitle(log: StepLog): string {
-  return panel.value?.step_labels[log.pipeline_step_id] || `passo ${log.order}`
+  if (log.pipeline_step_id) {
+    return panel.value?.step_labels[log.pipeline_step_id] || `passo ${log.order}`
+  }
+  return `Passo #${log.order} (definição removida da pipeline)`
 }
 
 function scrollTerminalToBottom() {
@@ -199,6 +209,36 @@ watch(panel, async () => {
         aria-live="polite"
         aria-relevant="additions text"
       >
+        <section
+          v-if="
+            panel &&
+            ((panel.workspace_prepare_exit_code !== null &&
+              panel.workspace_prepare_exit_code !== undefined) ||
+              panel.workspace_prepare_skipped)
+          "
+          class="mb-6 border-b border-zinc-800/80 pb-6"
+        >
+          <div class="mb-1 select-none text-sky-400/95">
+            Sincronização do repositório (Git)
+            <span v-if="workspaceSkipped" class="text-zinc-500"> · desativada na pipeline</span>
+            <span v-else-if="workspaceExit !== null" class="text-zinc-600"> · </span>
+            <span
+              v-if="workspaceExit !== null"
+              class="rounded px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide"
+              :class="{
+                'bg-emerald-950 text-emerald-400': workspaceExit === 0,
+                'bg-red-950 text-red-400': workspaceExit !== 0,
+              }"
+            >
+              exit {{ workspaceExit }}
+            </span>
+          </div>
+          <pre
+            v-if="workspaceLog"
+            class="mb-2 overflow-x-auto whitespace-pre-wrap break-words rounded border border-zinc-800/80 bg-black/40 px-3 py-2 text-zinc-300"
+          >{{ panel?.workspace_prepare_log }}</pre>
+          <p v-else class="text-zinc-500">Sem registo de preparação ainda.</p>
+        </section>
         <template v-if="sortedStepLogs.length">
           <section
             v-for="log in sortedStepLogs"

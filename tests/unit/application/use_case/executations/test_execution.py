@@ -15,7 +15,10 @@ from src.domain.value_objects.on_failure_policy import OnFailurePolicy
 from src.domain.value_objects.step_execution_status import StepExecutionStatus
 from src.domain.value_objects.step_type import StepType
 from tests.unit.application.fakes import (
+    FakeDockerExecService,
     FakeRunnerRegistry,
+    FakeSSHService,
+    FakeWorkspaceGitPrepare,
     MemoryEnvironmentRepo,
     MemoryExecutionRepo,
     MemoryPipelineRepo,
@@ -75,6 +78,9 @@ async def test_engine_marks_failed_and_skips_remaining_on_stop_policy() -> None:
         step_execution_repo=se_repo,
         pipeline_repo=p_repo,
         runner_registry=FakeRunnerRegistry(exit_code=1),
+        workspace_git_prepare=FakeWorkspaceGitPrepare(),
+        ssh_service=FakeSSHService(),
+        docker_exec=FakeDockerExecService(),
         notification_service=None,
     )
     final_execution = await run_next_step_until_terminal(e_repo, run_uc, started.id)
@@ -122,6 +128,9 @@ async def test_engine_continue_policy_advances_to_next_step() -> None:
         step_execution_repo=se_repo,
         pipeline_repo=p_repo,
         runner_registry=FakeRunnerRegistry(exit_code=1),
+        workspace_git_prepare=FakeWorkspaceGitPrepare(),
+        ssh_service=FakeSSHService(),
+        docker_exec=FakeDockerExecService(),
         notification_service=None,
     )
     await run_next_step_until_terminal(e_repo, run_uc, started.id)

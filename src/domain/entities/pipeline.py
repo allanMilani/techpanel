@@ -11,11 +11,16 @@ class Pipeline:
     environment_id: UUID
     name: str
     description: str | None = None
+    run_git_workspace_sync: bool = False
     steps: tuple[PipelineStep, ...] = ()
 
     @staticmethod
     def create(
-        name: str, environment_id: str, description: str | None = None
+        name: str,
+        environment_id: str,
+        description: str | None = None,
+        *,
+        run_git_workspace_sync: bool = False,
     ) -> "Pipeline":
         if not name.strip():
             raise ValidationError("Name is required")
@@ -28,6 +33,7 @@ class Pipeline:
             environment_id=UUID(environment_id),
             name=name.strip(),
             description=description,
+            run_git_workspace_sync=bool(run_git_workspace_sync),
             steps=(),
         )
 
